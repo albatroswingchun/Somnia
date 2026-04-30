@@ -10,7 +10,7 @@
 <title>Somnia</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Quicksand:wght@400;600;700&family=Syne:wght@300;400;700&display=swap" rel="stylesheet"/>
 
 <style>
 /* ═══════════════════════════════════════════════
@@ -59,7 +59,7 @@ html, body {
   z-index: 1;
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 0 96px;
+  padding: 0 0 24px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -80,7 +80,7 @@ html, body {
 }
 
 .wordmark-title {
-  font-family: var(--sans);
+  font-family: 'Quicksand', var(--sans);
   font-weight: 700;
   font-size: 22px;
   letter-spacing: -0.01em;
@@ -115,71 +115,6 @@ html, body {
 }
 .hdr-btn:hover  { color: var(--text); border-color: var(--border-hi); }
 .hdr-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
-
-/* ── MASTER ROW ─────────────────────────────────── */
-.master-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 20px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.master-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  min-width: 40px;
-}
-
-.master-vol-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.master-vol-val {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--accent);
-  min-width: 16px;
-  text-align: right;
-}
-
-/* Master slider */
-.slider-master {
-  flex: 1;
-  height: 3px;
-  -webkit-appearance: none;
-  appearance: none;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-  background: linear-gradient(
-    to right,
-    var(--accent) var(--pct, 80%),
-    var(--border-hi) var(--pct, 80%)
-  );
-}
-.slider-master::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: var(--text-hi);
-  box-shadow: 0 0 0 3px var(--bg), 0 0 10px var(--accent-glow);
-  transition: box-shadow 0.2s;
-}
-.slider-master:active::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px var(--bg), 0 0 18px rgba(107,164,232,0.5);
-}
-
-.master-actions {
-  display: flex;
-  gap: 6px;
-}
 
 .ghost-btn {
   height: 34px;
@@ -565,6 +500,8 @@ html, body {
   display: block;
 }
 
+.vasmr-back-float { position: fixed; top: 16px; left: 16px; z-index: 60; }
+
 .vasmr-overlay-controls {
   width: 100%;
   padding: 12px 20px 20px;
@@ -652,6 +589,7 @@ html, body {
   padding: 16px;
 }
 .modal-overlay.open { display: flex; }
+.modal-overlay.top { align-items: center; }
 
 .modal {
   width: 100%; max-width: 480px; margin: 0 auto;
@@ -704,39 +642,6 @@ html, body {
   cursor: pointer; transition: all 0.2s;
 }
 .btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
-
-/* ── NAV ─────────────────────────────────────────── */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex; justify-content: center;
-  padding: 10px 16px 18px;
-  background: linear-gradient(to top, var(--bg) 55%, transparent);
-}
-
-.nav-inner {
-  display: flex; gap: 4px;
-  background: rgba(11,14,26,0.9);
-  border: 1px solid var(--border-hi);
-  border-radius: 14px;
-  padding: 5px;
-  backdrop-filter: blur(20px);
-}
-
-.nav-btn {
-  height: 38px; padding: 0 20px;
-  border-radius: 10px; border: none;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex; align-items: center; gap: 6px;
-}
-.nav-btn.active { background: var(--bg-high); color: var(--text-hi); }
 
 /* ── TOAST ───────────────────────────────────────── */
 .toast {
@@ -803,6 +708,26 @@ html, body {
   to   { transform: scaleY(1); }
 }
 
+
+.intro-text {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.touch-gutter {
+  position: fixed; top: 0; right: 0;
+  width: 28px; height: 100dvh;
+  background: #000;
+  z-index: 120;
+  touch-action: pan-y;
+}
+
+@media (max-width: 768px) {
+  .app { max-width: calc(100vw - 28px); margin-right: 28px; }
+}
+
 /* ── SCROLLBAR ───────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -813,12 +738,14 @@ html, body {
 
 <!-- Ambient background -->
 <canvas id="bg-canvas"></canvas>
+<div class="touch-gutter" aria-hidden="true"></div>
 
 <!-- Dim overlay (bouton lune) -->
 <div id="dim-overlay"></div>
 
 <!-- Visual ASMR overlay -->
 <div id="vasmr-overlay">
+  <button class="ghost-btn vasmr-back-float" id="vasmr-back-float-btn">← Retour</button>
   <canvas id="vasmr-canvas"></canvas>
   <div class="vasmr-overlay-controls">
     <button class="vasmr-close-btn" id="vasmr-close-btn">✕ Fermer Visual ASMR</button>
@@ -827,6 +754,27 @@ html, body {
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Profile picker modal -->
+<div class="modal-overlay open top" id="profile-modal-overlay">
+  <div class="modal" style="position:relative">
+    <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
+    <h3>Choisir un profil</h3>
+    <p class="intro-text">Crée ton ambiance sonore sur mesure et laisse-toi glisser naturellement vers le sommeil. Une expérience ASMR immersive pensée pour apaiser ton esprit.</p>
+    <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
+    <input class="modal-input" id="profile-name-input" type="text" placeholder="Nouveau profil…" maxlength="40"/>
+    <button class="btn-primary" id="profile-create-btn">Entrer</button>
+    <div class="section-sep" style="padding:14px 0 6px;">
+      <span class="section-sep-label">Minuteur rapide</span><div class="section-sep-line"></div>
+    </div>
+    <div class="timer-chips" id="entry-timer-chips">
+      <button class="chip" data-min="15">15 min</button>
+      <button class="chip" data-min="30">30 min</button>
+      <button class="chip" data-min="45">45 min</button>
+      <button class="chip" data-min="60">1 h</button>
+    </div>
+  </div>
+</div>
 
 <!-- Save modal -->
 <div class="modal-overlay" id="modal-overlay">
@@ -840,33 +788,40 @@ html, body {
   </div>
 </div>
 
+<!-- Settings modal -->
+<div class="modal-overlay" id="settings-modal-overlay">
+  <div class="modal">
+    <h3>Réglage profil</h3>
+    <input class="modal-input" id="settings-rename-input" type="text" placeholder="Renommer le profil…" maxlength="40"/>
+    <div class="modal-actions" style="margin-bottom:8px;">
+      <button class="btn-primary" id="settings-rename-btn">Renommer</button>
+      <button class="btn-ghost" id="settings-reset-btn">Tout à zéro</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost danger" id="settings-delete-btn">Effacer sauvegarde profil</button>
+      <button class="btn-ghost" id="settings-close-btn">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ APP ════ -->
 <div class="app">
 
   <!-- HEADER -->
   <div class="header">
     <div class="wordmark">
-      <div class="wordmark-title">Somnia</div>
-      <div class="wordmark-sub">Table de mixage ASMR</div>
+      <div class="wordmark-title">SOMNIA</div>
+      <div class="wordmark-sub">S'endormir tout en douceur</div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" id="btn-dim" title="Réduire la luminosité">🌙</button>
       <button class="hdr-btn" id="btn-save-preset" title="Sauvegarder">💾</button>
-      <button class="hdr-btn" id="btn-random" title="Aléatoire">🎲</button>
+      <button class="hdr-btn" id="btn-settings" title="Réglage">⚙️</button>
     </div>
   </div>
 
-  <!-- MASTER VOLUME -->
-  <div class="master-row">
-    <span class="master-label">Maître</span>
-    <div class="master-vol-wrap">
-      <input type="range" class="slider-master" id="master-vol"
-             min="0" max="10" value="8" step="1"/>
-      <span class="master-vol-val" id="master-vol-val">8</span>
-    </div>
-    <div class="master-actions">
-      <button class="ghost-btn danger" id="btn-stop">⏹ Stop</button>
-    </div>
+  <div style="padding: 0 20px 16px; border-bottom: 1px solid var(--border);">
+    <button class="ghost-btn danger" id="btn-stop" title="OFF">⏻</button>
   </div>
 
   <!-- PAGE: MIX -->
@@ -940,26 +895,7 @@ html, body {
 
   </div><!-- end page-mix -->
 
-  <!-- PAGE: PRESETS -->
-  <div class="page" id="page-presets">
-    <div class="section-sep" style="padding-top:20px">
-      <span class="section-sep-label">Presets</span>
-      <div class="section-sep-line"></div>
-    </div>
-    <div class="presets-section">
-      <div class="preset-list" id="preset-list"></div>
-    </div>
-  </div>
-
 </div><!-- end .app -->
-
-<!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <div class="nav-inner">
-    <button class="nav-btn active" id="nav-mix" data-page="mix">🎛 Mix</button>
-    <button class="nav-btn" id="nav-presets" data-page="presets">📁 Presets</button>
-  </div>
-</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════
@@ -1135,16 +1071,27 @@ class AudioEngine {
   // ── Clic ASMR (son court synthétique) ───────────────────────
   playClick() {
     if (!this.ready) return;
-    const osc  = this.ctx.createOscillator();
+    const dur = 0.045;
+    const len = Math.floor(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const env = Math.exp(-i / (len * 0.18));
+      data[i] = (Math.random() * 2 - 1) * env * 0.9;
+    }
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1600;
     const gain = this.ctx.createGain();
-    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
-    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.06);
-    osc.connect(gain);
+    gain.gain.setValueAtTime(0.13, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
+    src.connect(hp);
+    hp.connect(gain);
     gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.07);
+    src.start();
+    src.stop(this.ctx.currentTime + dur);
   }
 
   // ── Snapshot de l'état ──────────────────────────────────────
@@ -1510,21 +1457,20 @@ let vasmr     = null;
 const volumes = {};
 SOUNDS.forEach(s => volumes[s.id] = 0);
 
-const masterVal = 10; // désactivé: pas de volume global
 let dimOn     = false;
 let vasmrOn   = false;
+let currentProfileId = null;
+let pendingProfileId = null;
 
 // Timer
 let timerInterval = null;
 let timerTotal    = 0;
 let timerRemain   = 0;
-const savedMaster   = 10;
 
 // ─────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────
 function toAudioVol(v)  { return v / 10; }      // 0–10 → 0.0–1.0
-function toAudioMaster(v) { return 1; }
 
 function toast(msg, ms = 2200) {
   const el = document.getElementById('toast');
@@ -1536,6 +1482,8 @@ function toast(msg, ms = 2200) {
 
 function loadPresets() { return JSON.parse(localStorage.getItem('somnia_v2_presets') || '[]'); }
 function savePresets(p) { localStorage.setItem('somnia_v2_presets', JSON.stringify(p)); }
+function loadProfiles() { return JSON.parse(localStorage.getItem('somnia_v2_profiles') || '[]'); }
+function saveProfiles(p) { localStorage.setItem('somnia_v2_profiles', JSON.stringify(p)); }
 
 // ─────────────────────────────────────────────────────────────────
 // GESTION AUDIO : activer/désactiver selon volume
@@ -1562,6 +1510,8 @@ async function handleTrackVolume(id, val) {
       await engine.startTrack(id, avol);
     }
   }
+  persistCurrentProfileState();
+  updateStopButtonState();
 }
 
 function updateSliderStyle(id, val) {
@@ -1579,6 +1529,13 @@ function updateRowActive(id, val) {
   if (!row) return;
   if (val > 0) row.classList.add('active');
   else         row.classList.remove('active');
+}
+
+function updateStopButtonState() {
+  const hasActive = Object.values(volumes).some(v => v > 0);
+  const btn = document.getElementById('btn-stop');
+  btn.title = hasActive ? 'ON' : 'OFF';
+  btn.style.color = hasActive ? 'var(--accent)' : 'var(--text-dim)';
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1623,6 +1580,8 @@ function buildTrackList() {
 
     list.appendChild(row);
   }
+  persistCurrentProfileState();
+  updateStopButtonState();
 }
 
 // Volume global supprimé: contrôle uniquement par piste
@@ -1639,34 +1598,11 @@ document.getElementById('btn-stop').addEventListener('click', () => {
     updateSliderStyle(s.id, 0);
     updateRowActive(s.id, 0);
   });
+  updateStopButtonState();
   toast('⏹ Tout arrêté');
 });
 
 // ─────────────────────────────────────────────────────────────────
-// RANDOM AMBIANCE
-// ─────────────────────────────────────────────────────────────────
-document.getElementById('btn-random').addEventListener('click', async () => {
-  engine.stopAll();
-  SOUNDS.forEach(s => {
-    volumes[s.id] = 0;
-    const slider = document.getElementById(`slider-${s.id}`);
-    if (slider) slider.value = 0;
-    updateSliderStyle(s.id, 0);
-    updateRowActive(s.id, 0);
-  });
-
-  const shuffled = [...SOUNDS].sort(() => Math.random() - 0.5);
-  const picks    = shuffled.slice(0, 2 + Math.floor(Math.random() * 3));
-
-  for (const s of picks) {
-    const val = 4 + Math.floor(Math.random() * 5); // 4–8
-    const slider = document.getElementById(`slider-${s.id}`);
-    if (slider) slider.value = val;
-    await handleTrackVolume(s.id, val);
-  }
-  toast('🎲 Ambiance aléatoire');
-});
-
 // ─────────────────────────────────────────────────────────────────
 // DIM MODE (luminosité réduite)
 // ─────────────────────────────────────────────────────────────────
@@ -1707,6 +1643,8 @@ document.getElementById('modal-save').addEventListener('click', () => {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('preset-name-input').value = '';
   renderPresets();
+  renderProfilePicker();
+  updateStopButtonState();
   toast(`💾 "${name}" sauvegardé`);
 });
 
@@ -1742,6 +1680,8 @@ function renderPresets() {
         const removed = ps.splice(i, 1)[0];
         savePresets(ps);
         renderPresets();
+  renderProfilePicker();
+  updateStopButtonState();
         toast(`🗑 "${removed.name}" supprimé`);
         return;
       }
@@ -1760,53 +1700,38 @@ function renderPresets() {
       }
 
 
-      switchPage('mix');
       toast(`🎵 "${p.name}" chargé`);
     });
 
     list.appendChild(item);
   });
+  updateStopButtonState();
 }
 
 // ─────────────────────────────────────────────────────────────────
 // TIMER
 // ─────────────────────────────────────────────────────────────────
-document.getElementById('timer-chips').addEventListener('click', async (e) => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-
-  // Si timer déjà en cours avec ce chip → annuler
-  const min = parseInt(chip.dataset.min, 10);
-
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-
-  if (!engine.ready) await engine.init();
-
+function startTimer(min, sourceChip) {
+  document.querySelectorAll('#timer-chips .chip, #entry-timer-chips .chip').forEach(c => c.classList.remove('active'));
+  if (sourceChip) sourceChip.classList.add('active');
   clearInterval(timerInterval);
-
-  timerTotal   = min * 60;
-  timerRemain  = timerTotal;
-
+  timerTotal = min * 60;
+  timerRemain = timerTotal;
   document.getElementById('timer-running-row').classList.add('visible');
   updateTimerDisplay();
-
   timerInterval = setInterval(() => {
     timerRemain--;
     updateTimerDisplay();
-
-    // Fade out global sur les 45 dernières secondes
-    const FADE_SEC = 45;
-    if (timerRemain <= FADE_SEC) {
-      const fraction = timerRemain / FADE_SEC;
-      const target   = toAudioMaster(savedMaster) * fraction;
-      engine.setMasterVolume(target);
-    }
 
     if (timerRemain <= 0) {
       clearInterval(timerInterval);
       timerInterval = null;
       engine.stopAll();
+      vasmrOn = false;
+      if (vasmr) vasmr.stop();
+      document.getElementById('vasmr-overlay').classList.remove('visible');
+      document.getElementById('vasmr-toggle').classList.remove('on');
+      document.getElementById('vasmr-controls').classList.remove('visible');
       SOUNDS.forEach(s => {
         volumes[s.id] = 0;
         const slider = document.getElementById(`slider-${s.id}`);
@@ -1817,8 +1742,20 @@ document.getElementById('timer-chips').addEventListener('click', async (e) => {
 
       document.getElementById('timer-running-row').classList.remove('visible');
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      updateStopButtonState();
     }
   }, 1000);
+}
+
+document.getElementById('timer-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  startTimer(parseInt(chip.dataset.min, 10), chip);
+});
+document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  startTimer(parseInt(chip.dataset.min, 10), chip);
 });
 
 function updateTimerDisplay() {
@@ -1839,6 +1776,128 @@ document.getElementById('timer-cancel-btn').addEventListener('click', () => {
   toast('⏹ Minuteur annulé');
 });
 
+function resetAllTracks() {
+  engine.stopAll();
+  SOUNDS.forEach(s => {
+    volumes[s.id] = 0;
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = 0;
+    updateSliderStyle(s.id, 0);
+    updateRowActive(s.id, 0);
+  });
+  updateStopButtonState();
+}
+
+function persistCurrentProfileState() {
+  if (!currentProfileId) return;
+  const profiles = loadProfiles();
+  const i = profiles.findIndex(p => p.id === currentProfileId);
+  if (i < 0) return;
+  profiles[i].volumes = { ...volumes };
+  profiles[i].updatedAt = Date.now();
+  saveProfiles(profiles);
+}
+
+async function loadProfileState(profileId) {
+  const profile = loadProfiles().find(p => p.id === profileId);
+  if (!profile) return;
+  currentProfileId = profileId;
+  resetAllTracks();
+  if (!engine.ready) await engine.init();
+  for (const s of SOUNDS) {
+    const val = profile.volumes?.[s.id] ?? 0;
+    volumes[s.id] = val;
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = val;
+    updateSliderStyle(s.id, val);
+    updateRowActive(s.id, val);
+    if (val > 0) await engine.startTrack(s.id, toAudioVol(val));
+  }
+}
+
+function renderProfilePicker() {
+  const list = document.getElementById('profile-list');
+  const profiles = loadProfiles();
+  if (!profiles.length) {
+    list.innerHTML = '<div class="empty-msg">Aucun profil local</div>';
+    return;
+  }
+  list.innerHTML = '';
+  profiles.forEach(profile => {
+    const item = document.createElement('div');
+    item.className = 'preset-item';
+    item.innerHTML = `<span style="font-size:18px">👤</span><span class="preset-name">${profile.name}</span>`;
+    item.addEventListener('click', () => {
+      pendingProfileId = profile.id;
+      document.querySelectorAll('#profile-list .preset-item').forEach(el => el.style.borderColor = 'var(--border)');
+      item.style.borderColor = 'var(--accent)';
+    });
+    list.appendChild(item);
+  });
+  updateStopButtonState();
+}
+
+document.getElementById('profile-skip-btn').addEventListener('click', () => {
+  currentProfileId = null;
+  resetAllTracks();
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+});
+
+document.getElementById('profile-create-btn').addEventListener('click', () => {
+  const name = document.getElementById('profile-name-input').value.trim();
+  if (name) {
+    const profiles = loadProfiles();
+    const id = `p_${Date.now()}`;
+    profiles.push({ id, name, volumes: {}, updatedAt: Date.now() });
+    saveProfiles(profiles);
+    currentProfileId = id;
+    pendingProfileId = id;
+    toast(`👤 "${name}" créé`);
+  } else if (pendingProfileId) {
+    loadProfileState(pendingProfileId);
+    toast('👤 Profil chargé');
+  } else {
+    currentProfileId = null;
+    resetAllTracks();
+    toast('Bienvenue dans Somnia');
+  }
+  document.getElementById('profile-name-input').value = '';
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+});
+
+document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('settings-modal-overlay').classList.add('open');
+});
+document.getElementById('settings-close-btn').addEventListener('click', () => {
+  document.getElementById('settings-modal-overlay').classList.remove('open');
+});
+document.getElementById('settings-reset-btn').addEventListener('click', () => {
+  resetAllTracks();
+  persistCurrentProfileState();
+  toast('↺ Tout remis à zéro');
+});
+document.getElementById('settings-rename-btn').addEventListener('click', () => {
+  if (!currentProfileId) return toast('Aucun profil actif');
+  const newName = document.getElementById('settings-rename-input').value.trim();
+  if (!newName) return;
+  const profiles = loadProfiles();
+  const i = profiles.findIndex(p => p.id === currentProfileId);
+  if (i < 0) return;
+  profiles[i].name = newName;
+  saveProfiles(profiles);
+  renderProfilePicker();
+  toast('✏️ Profil renommé');
+});
+document.getElementById('settings-delete-btn').addEventListener('click', () => {
+  if (!currentProfileId) return toast('Aucun profil actif');
+  const profiles = loadProfiles().filter(p => p.id !== currentProfileId);
+  saveProfiles(profiles);
+  currentProfileId = null;
+  resetAllTracks();
+  renderProfilePicker();
+  toast('🗑 Sauvegarde profil effacée');
+});
+
 // ─────────────────────────────────────────────────────────────────
 // VISUAL ASMR
 // ─────────────────────────────────────────────────────────────────
@@ -1848,6 +1907,7 @@ const vasmrSpeedSlider  = document.getElementById('vasmr-speed');
 const vasmrSpeedVal     = document.getElementById('vasmr-speed-val');
 const vasmrClickToggle  = document.getElementById('vasmr-click-toggle');
 const vasmrOpenBtn      = document.getElementById('vasmr-open-btn');
+const vasmrBackBtn      = document.getElementById('vasmr-back-float-btn');
 const vasmrOverlay      = document.getElementById('vasmr-overlay');
 const vasmrCanvas       = document.getElementById('vasmr-canvas');
 const vasmrCloseBtn     = document.getElementById('vasmr-close-btn');
@@ -1883,6 +1943,7 @@ document.querySelectorAll('.mode-chip').forEach(btn => {
     const mode = btn.dataset.mode;
     if (vasmr) vasmr.setMode(mode);
   });
+  updateStopButtonState();
 });
 
 vasmrOpenBtn.addEventListener('click', async () => {
@@ -1904,9 +1965,18 @@ vasmrOpenBtn.addEventListener('click', async () => {
     vasmr.resize();
     vasmr.start();
   });
+  updateStopButtonState();
 });
 
 vasmrCloseBtn.addEventListener('click', () => {
+  vasmr?.stop();
+  vasmrOverlay.classList.remove('visible');
+});
+
+vasmrBackBtn.addEventListener('click', () => {
+  vasmrOn = false;
+  vasmrToggle.classList.remove('on');
+  vasmrControls.classList.remove('visible');
   vasmr?.stop();
   vasmrOverlay.classList.remove('visible');
 });
@@ -1920,16 +1990,9 @@ window.addEventListener('resize', () => {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────────
 function switchPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`page-${id}`).classList.add('active');
-  document.getElementById(`nav-${id}`).classList.add('active');
-  if (id === 'presets') renderPresets();
+  const mixPage = document.getElementById('page-mix');
+  if (mixPage) mixPage.classList.add('active');
 }
-
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchPage(btn.dataset.page));
-});
 
 // ─────────────────────────────────────────────────────────────────
 // AMBIENT CANVAS (orbes flottantes en fond)
@@ -1984,6 +2047,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(console.warn);
   });
+  updateStopButtonState();
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1994,6 +2058,8 @@ if ('serviceWorker' in navigator) {
   buildTrackList();
   initAmbient();
   renderPresets();
+  renderProfilePicker();
+  updateStopButtonState();
 })();
 </script>
 </body>
