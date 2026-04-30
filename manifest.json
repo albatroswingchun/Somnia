@@ -1,13 +1,14 @@
 {
-  "name": "Somnia — Ambiance & Réveil",
+  "name": "Somnia — Table de mixage ASMR",
   "short_name": "Somnia",
-  "description": "Application de réveil et d'ambiance sonore ASMR. Mixez vos sons, dormez mieux.",
+  "description": "Table de mixage ASMR mobile-first. Composez votre ambiance sonore idéale.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#050810",
-  "theme_color": "#050810",
+  "background_color": "#06080f",
+  "theme_color": "#06080f",
   "orientation": "portrait-primary",
   "categories": ["lifestyle", "health", "music"],
+  "lang": "fr-FR",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
@@ -21,16 +22,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "Lancer ambiance aléatoire",
-      "short_name": "Aléatoire",
-      "description": "Lance une ambiance sonore aléatoire",
-      "url": "./index.html?action=random",
-      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "screenshots": [],
-  "lang": "fr-FR"
+  ]
 }
