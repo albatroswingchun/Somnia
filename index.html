@@ -587,6 +587,7 @@ html, body {
   padding: 16px;
 }
 .modal-overlay.open { display: flex; }
+.modal-overlay.top { align-items: center; }
 
 .modal {
   width: 100%; max-width: 480px; margin: 0 auto;
@@ -763,6 +764,17 @@ html, body {
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Profile picker modal -->
+<div class="modal-overlay open top" id="profile-modal-overlay">
+  <div class="modal" style="position:relative">
+    <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
+    <h3>Choisir un profil</h3>
+    <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
+    <input class="modal-input" id="profile-name-input" type="text" placeholder="Nouveau profil…" maxlength="40"/>
+    <button class="btn-primary" id="profile-create-btn">Créer et charger</button>
+  </div>
+</div>
+
 <!-- Save modal -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -771,6 +783,22 @@ html, body {
     <div class="modal-actions">
       <button class="btn-ghost" id="modal-cancel">Annuler</button>
       <button class="btn-primary" id="modal-save">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-overlay" id="settings-modal-overlay">
+  <div class="modal">
+    <h3>Réglage profil</h3>
+    <input class="modal-input" id="settings-rename-input" type="text" placeholder="Renommer le profil…" maxlength="40"/>
+    <div class="modal-actions" style="margin-bottom:8px;">
+      <button class="btn-primary" id="settings-rename-btn">Renommer</button>
+      <button class="btn-ghost" id="settings-reset-btn">Tout à zéro</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost danger" id="settings-delete-btn">Effacer sauvegarde profil</button>
+      <button class="btn-ghost" id="settings-close-btn">Fermer</button>
     </div>
   </div>
 </div>
@@ -787,7 +815,7 @@ html, body {
     <div class="header-actions">
       <button class="hdr-btn" id="btn-dim" title="Réduire la luminosité">🌙</button>
       <button class="hdr-btn" id="btn-save-preset" title="Sauvegarder">💾</button>
-      <button class="hdr-btn" id="btn-random" title="Aléatoire">🎲</button>
+      <button class="hdr-btn" id="btn-settings" title="Réglage">⚙️</button>
     </div>
   </div>
 
@@ -1438,6 +1466,7 @@ SOUNDS.forEach(s => volumes[s.id] = 0);
 
 let dimOn     = false;
 let vasmrOn   = false;
+let currentProfileId = null;
 
 // Timer
 let timerInterval = null;
@@ -1459,6 +1488,8 @@ function toast(msg, ms = 2200) {
 
 function loadPresets() { return JSON.parse(localStorage.getItem('somnia_v2_presets') || '[]'); }
 function savePresets(p) { localStorage.setItem('somnia_v2_presets', JSON.stringify(p)); }
+function loadProfiles() { return JSON.parse(localStorage.getItem('somnia_v2_profiles') || '[]'); }
+function saveProfiles(p) { localStorage.setItem('somnia_v2_profiles', JSON.stringify(p)); }
 
 // ─────────────────────────────────────────────────────────────────
 // GESTION AUDIO : activer/désactiver selon volume
@@ -1485,6 +1516,7 @@ async function handleTrackVolume(id, val) {
       await engine.startTrack(id, avol);
     }
   }
+  persistCurrentProfileState();
 }
 
 function updateSliderStyle(id, val) {
@@ -1546,6 +1578,7 @@ function buildTrackList() {
 
     list.appendChild(row);
   }
+  persistCurrentProfileState();
 }
 
 // Volume global supprimé: contrôle uniquement par piste
@@ -1566,30 +1599,6 @@ document.getElementById('btn-stop').addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────
-// RANDOM AMBIANCE
-// ─────────────────────────────────────────────────────────────────
-document.getElementById('btn-random').addEventListener('click', async () => {
-  engine.stopAll();
-  SOUNDS.forEach(s => {
-    volumes[s.id] = 0;
-    const slider = document.getElementById(`slider-${s.id}`);
-    if (slider) slider.value = 0;
-    updateSliderStyle(s.id, 0);
-    updateRowActive(s.id, 0);
-  });
-
-  const shuffled = [...SOUNDS].sort(() => Math.random() - 0.5);
-  const picks    = shuffled.slice(0, 2 + Math.floor(Math.random() * 3));
-
-  for (const s of picks) {
-    const val = 4 + Math.floor(Math.random() * 5); // 4–8
-    const slider = document.getElementById(`slider-${s.id}`);
-    if (slider) slider.value = val;
-    await handleTrackVolume(s.id, val);
-  }
-  toast('🎲 Ambiance aléatoire');
-});
-
 // ─────────────────────────────────────────────────────────────────
 // DIM MODE (luminosité réduite)
 // ─────────────────────────────────────────────────────────────────
@@ -1630,6 +1639,7 @@ document.getElementById('modal-save').addEventListener('click', () => {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('preset-name-input').value = '';
   renderPresets();
+renderProfilePicker();
   toast(`💾 "${name}" sauvegardé`);
 });
 
@@ -1665,6 +1675,7 @@ function renderPresets() {
         const removed = ps.splice(i, 1)[0];
         savePresets(ps);
         renderPresets();
+renderProfilePicker();
         toast(`🗑 "${removed.name}" supprimé`);
         return;
       }
@@ -1840,6 +1851,7 @@ function switchPage(id) {
   document.getElementById(`page-${id}`).classList.add('active');
   document.getElementById(`nav-${id}`).classList.add('active');
   if (id === 'presets') renderPresets();
+renderProfilePicker();
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1909,6 +1921,7 @@ if ('serviceWorker' in navigator) {
   buildTrackList();
   initAmbient();
   renderPresets();
+renderProfilePicker();
 })();
 </script>
 </body>
