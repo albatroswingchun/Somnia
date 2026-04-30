@@ -59,7 +59,7 @@ html, body {
   z-index: 1;
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 0 96px;
+  padding: 0 0 24px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -500,6 +500,8 @@ html, body {
   display: block;
 }
 
+.vasmr-back-float { position: fixed; top: 16px; left: 16px; z-index: 60; }
+
 .vasmr-overlay-controls {
   width: 100%;
   padding: 12px 20px 20px;
@@ -641,39 +643,6 @@ html, body {
 }
 .btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
 
-/* ── NAV ─────────────────────────────────────────── */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex; justify-content: center;
-  padding: 10px 16px 18px;
-  background: linear-gradient(to top, var(--bg) 55%, transparent);
-}
-
-.nav-inner {
-  display: flex; gap: 4px;
-  background: rgba(11,14,26,0.9);
-  border: 1px solid var(--border-hi);
-  border-radius: 14px;
-  padding: 5px;
-  backdrop-filter: blur(20px);
-}
-
-.nav-btn {
-  height: 38px; padding: 0 20px;
-  border-radius: 10px; border: none;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex; align-items: center; gap: 6px;
-}
-.nav-btn.active { background: var(--bg-high); color: var(--text-hi); }
-
 /* ── TOAST ───────────────────────────────────────── */
 .toast {
   position: fixed;
@@ -776,6 +745,7 @@ html, body {
 
 <!-- Visual ASMR overlay -->
 <div id="vasmr-overlay">
+  <button class="ghost-btn vasmr-back-float" id="vasmr-back-float-btn">← Retour</button>
   <canvas id="vasmr-canvas"></canvas>
   <div class="vasmr-overlay-controls">
     <button class="vasmr-close-btn" id="vasmr-close-btn">✕ Fermer Visual ASMR</button>
@@ -929,26 +899,7 @@ html, body {
 
   </div><!-- end page-mix -->
 
-  <!-- PAGE: PRESETS -->
-  <div class="page" id="page-presets">
-    <div class="section-sep" style="padding-top:20px">
-      <span class="section-sep-label">Presets</span>
-      <div class="section-sep-line"></div>
-    </div>
-    <div class="presets-section">
-      <div class="preset-list" id="preset-list"></div>
-    </div>
-  </div>
-
 </div><!-- end .app -->
-
-<!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <div class="nav-inner">
-    <button class="nav-btn active" id="nav-mix" data-page="mix">🎛 Mix</button>
-    <button class="nav-btn" id="nav-presets" data-page="presets">📁 Presets</button>
-  </div>
-</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════
@@ -1124,16 +1075,27 @@ class AudioEngine {
   // ── Clic ASMR (son court synthétique) ───────────────────────
   playClick() {
     if (!this.ready) return;
-    const osc  = this.ctx.createOscillator();
+    const dur = 0.045;
+    const len = Math.floor(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const env = Math.exp(-i / (len * 0.18));
+      data[i] = (Math.random() * 2 - 1) * env * 0.9;
+    }
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1600;
     const gain = this.ctx.createGain();
-    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
-    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.06);
-    osc.connect(gain);
+    gain.gain.setValueAtTime(0.13, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
+    src.connect(hp);
+    hp.connect(gain);
     gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.07);
+    src.start();
+    src.stop(this.ctx.currentTime + dur);
   }
 
   // ── Snapshot de l'état ──────────────────────────────────────
@@ -1742,7 +1704,6 @@ function renderPresets() {
       }
 
 
-      switchPage('mix');
       toast(`🎵 "${p.name}" chargé`);
     });
 
@@ -1770,6 +1731,11 @@ function startTimer(min, sourceChip) {
       clearInterval(timerInterval);
       timerInterval = null;
       engine.stopAll();
+      vasmrOn = false;
+      if (vasmr) vasmr.stop();
+      document.getElementById('vasmr-overlay').classList.remove('visible');
+      document.getElementById('vasmr-toggle').classList.remove('on');
+      document.getElementById('vasmr-controls').classList.remove('visible');
       SOUNDS.forEach(s => {
         volumes[s.id] = 0;
         const slider = document.getElementById(`slider-${s.id}`);
@@ -1780,6 +1746,7 @@ function startTimer(min, sourceChip) {
 
       document.getElementById('timer-running-row').classList.remove('visible');
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      updateStopButtonState();
     }
   }, 1000);
 }
@@ -1944,7 +1911,7 @@ const vasmrSpeedSlider  = document.getElementById('vasmr-speed');
 const vasmrSpeedVal     = document.getElementById('vasmr-speed-val');
 const vasmrClickToggle  = document.getElementById('vasmr-click-toggle');
 const vasmrOpenBtn      = document.getElementById('vasmr-open-btn');
-const vasmrBackBtn      = document.getElementById('vasmr-back-btn');
+const vasmrBackBtn      = document.getElementById('vasmr-back-float-btn');
 const vasmrOverlay      = document.getElementById('vasmr-overlay');
 const vasmrCanvas       = document.getElementById('vasmr-canvas');
 const vasmrCloseBtn     = document.getElementById('vasmr-close-btn');
@@ -2027,17 +1994,9 @@ window.addEventListener('resize', () => {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────────
 function switchPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`page-${id}`).classList.add('active');
-  document.getElementById(`nav-${id}`).classList.add('active');
-  if (id === 'presets') renderPresets();
-renderProfilePicker();
+  const mixPage = document.getElementById('page-mix');
+  if (mixPage) mixPage.classList.add('active');
 }
-
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchPage(btn.dataset.page));
-});
 
 // ─────────────────────────────────────────────────────────────────
 // AMBIENT CANVAS (orbes flottantes en fond)
