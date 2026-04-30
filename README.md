@@ -304,3 +304,13 @@ MIT — libre d'utilisation, modification et distribution.
 ---
 
 *Somnia — Dormez mieux.*
+
+---
+
+## Changements récents (avril 2026)
+
+- Le **volume maître global** est retiré de l'expérience utilisateur.
+- Le mix repose désormais uniquement sur les **volumes par son** (0 à 10).
+- Une base de données de bibliothèque partagée est ajoutée : `assets/audio/library.json`.
+- Tous les fichiers référencés dans cette bibliothèque, une fois commités, sont distribués à tous les utilisateurs.
+
