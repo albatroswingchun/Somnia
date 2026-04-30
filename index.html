@@ -116,71 +116,6 @@ html, body {
 .hdr-btn:hover  { color: var(--text); border-color: var(--border-hi); }
 .hdr-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
 
-/* ── MASTER ROW ─────────────────────────────────── */
-.master-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 20px 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.master-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  min-width: 40px;
-}
-
-.master-vol-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.master-vol-val {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--accent);
-  min-width: 16px;
-  text-align: right;
-}
-
-/* Master slider */
-.slider-master {
-  flex: 1;
-  height: 3px;
-  -webkit-appearance: none;
-  appearance: none;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-  background: linear-gradient(
-    to right,
-    var(--accent) var(--pct, 80%),
-    var(--border-hi) var(--pct, 80%)
-  );
-}
-.slider-master::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: var(--text-hi);
-  box-shadow: 0 0 0 3px var(--bg), 0 0 10px var(--accent-glow);
-  transition: box-shadow 0.2s;
-}
-.slider-master:active::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px var(--bg), 0 0 18px rgba(107,164,232,0.5);
-}
-
-.master-actions {
-  display: flex;
-  gap: 6px;
-}
-
 .ghost-btn {
   height: 34px;
   padding: 0 12px;
@@ -856,17 +791,8 @@ html, body {
     </div>
   </div>
 
-  <!-- MASTER VOLUME -->
-  <div class="master-row">
-    <span class="master-label">Maître</span>
-    <div class="master-vol-wrap">
-      <input type="range" class="slider-master" id="master-vol"
-             min="0" max="10" value="8" step="1"/>
-      <span class="master-vol-val" id="master-vol-val">8</span>
-    </div>
-    <div class="master-actions">
-      <button class="ghost-btn danger" id="btn-stop">⏹ Stop</button>
-    </div>
+  <div style="padding: 0 20px 16px; border-bottom: 1px solid var(--border);">
+    <button class="ghost-btn danger" id="btn-stop">⏹ Stop</button>
   </div>
 
   <!-- PAGE: MIX -->
@@ -1510,7 +1436,6 @@ let vasmr     = null;
 const volumes = {};
 SOUNDS.forEach(s => volumes[s.id] = 0);
 
-const masterVal = 10; // désactivé: pas de volume global
 let dimOn     = false;
 let vasmrOn   = false;
 
@@ -1518,13 +1443,11 @@ let vasmrOn   = false;
 let timerInterval = null;
 let timerTotal    = 0;
 let timerRemain   = 0;
-const savedMaster   = 10;
 
 // ─────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────
 function toAudioVol(v)  { return v / 10; }      // 0–10 → 0.0–1.0
-function toAudioMaster(v) { return 1; }
 
 function toast(msg, ms = 2200) {
   const el = document.getElementById('toast');
@@ -1794,14 +1717,6 @@ document.getElementById('timer-chips').addEventListener('click', async (e) => {
   timerInterval = setInterval(() => {
     timerRemain--;
     updateTimerDisplay();
-
-    // Fade out global sur les 45 dernières secondes
-    const FADE_SEC = 45;
-    if (timerRemain <= FADE_SEC) {
-      const fraction = timerRemain / FADE_SEC;
-      const target   = toAudioMaster(savedMaster) * fraction;
-      engine.setMasterVolume(target);
-    }
 
     if (timerRemain <= 0) {
       clearInterval(timerInterval);
