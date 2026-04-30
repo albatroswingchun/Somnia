@@ -1765,6 +1765,117 @@ document.getElementById('timer-cancel-btn').addEventListener('click', () => {
   toast('⏹ Minuteur annulé');
 });
 
+function resetAllTracks() {
+  engine.stopAll();
+  SOUNDS.forEach(s => {
+    volumes[s.id] = 0;
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = 0;
+    updateSliderStyle(s.id, 0);
+    updateRowActive(s.id, 0);
+  });
+}
+
+function persistCurrentProfileState() {
+  if (!currentProfileId) return;
+  const profiles = loadProfiles();
+  const i = profiles.findIndex(p => p.id === currentProfileId);
+  if (i < 0) return;
+  profiles[i].volumes = { ...volumes };
+  profiles[i].updatedAt = Date.now();
+  saveProfiles(profiles);
+}
+
+async function loadProfileState(profileId) {
+  const profile = loadProfiles().find(p => p.id === profileId);
+  if (!profile) return;
+  currentProfileId = profileId;
+  resetAllTracks();
+  if (!engine.ready) await engine.init();
+  for (const s of SOUNDS) {
+    const val = profile.volumes?.[s.id] ?? 0;
+    volumes[s.id] = val;
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = val;
+    updateSliderStyle(s.id, val);
+    updateRowActive(s.id, val);
+    if (val > 0) await engine.startTrack(s.id, toAudioVol(val));
+  }
+}
+
+function renderProfilePicker() {
+  const list = document.getElementById('profile-list');
+  const profiles = loadProfiles();
+  if (!profiles.length) {
+    list.innerHTML = '<div class="empty-msg">Aucun profil local</div>';
+    return;
+  }
+  list.innerHTML = '';
+  profiles.forEach(profile => {
+    const item = document.createElement('div');
+    item.className = 'preset-item';
+    item.innerHTML = `<span style="font-size:18px">👤</span><span class="preset-name">${profile.name}</span>`;
+    item.addEventListener('click', async () => {
+      await loadProfileState(profile.id);
+      document.getElementById('profile-modal-overlay').classList.remove('open');
+      toast(`👤 "${profile.name}" chargé`);
+    });
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('profile-skip-btn').addEventListener('click', () => {
+  currentProfileId = null;
+  resetAllTracks();
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+});
+
+document.getElementById('profile-create-btn').addEventListener('click', () => {
+  const name = document.getElementById('profile-name-input').value.trim();
+  if (!name) return;
+  const profiles = loadProfiles();
+  const id = `p_${Date.now()}`;
+  profiles.push({ id, name, volumes: {}, updatedAt: Date.now() });
+  saveProfiles(profiles);
+  currentProfileId = id;
+  document.getElementById('profile-name-input').value = '';
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  toast(`👤 "${name}" créé`);
+});
+
+document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('settings-modal-overlay').classList.add('open');
+});
+document.getElementById('settings-close-btn').addEventListener('click', () => {
+  document.getElementById('settings-modal-overlay').classList.remove('open');
+});
+document.getElementById('settings-reset-btn').addEventListener('click', () => {
+  resetAllTracks();
+  persistCurrentProfileState();
+  toast('↺ Tout remis à zéro');
+});
+document.getElementById('settings-rename-btn').addEventListener('click', () => {
+  if (!currentProfileId) return toast('Aucun profil actif');
+  const newName = document.getElementById('settings-rename-input').value.trim();
+  if (!newName) return;
+  const profiles = loadProfiles();
+  const i = profiles.findIndex(p => p.id === currentProfileId);
+  if (i < 0) return;
+  profiles[i].name = newName;
+  saveProfiles(profiles);
+  renderProfilePicker();
+  toast('✏️ Profil renommé');
+});
+document.getElementById('settings-delete-btn').addEventListener('click', () => {
+  if (!currentProfileId) return toast('Aucun profil actif');
+  const profiles = loadProfiles().filter(p => p.id !== currentProfileId);
+  saveProfiles(profiles);
+  currentProfileId = null;
+  resetAllTracks();
+  renderProfilePicker();
+  toast('🗑 Sauvegarde profil effacée');
+});
+
 // ─────────────────────────────────────────────────────────────────
 // VISUAL ASMR
 // ─────────────────────────────────────────────────────────────────
