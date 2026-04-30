@@ -10,7 +10,7 @@
 <title>Somnia</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Quicksand:wght@400;600;700&family=Syne:wght@300;400;700&display=swap" rel="stylesheet"/>
 
 <style>
 /* ═══════════════════════════════════════════════
@@ -80,7 +80,7 @@ html, body {
 }
 
 .wordmark-title {
-  font-family: var(--sans);
+  font-family: 'Quicksand', var(--sans);
   font-weight: 700;
   font-size: 22px;
   letter-spacing: -0.01em;
@@ -739,6 +739,26 @@ html, body {
   to   { transform: scaleY(1); }
 }
 
+
+.intro-text {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.touch-gutter {
+  position: fixed; top: 0; right: 0;
+  width: 28px; height: 100dvh;
+  background: #000;
+  z-index: 120;
+  touch-action: pan-y;
+}
+
+@media (max-width: 768px) {
+  .app { max-width: calc(100vw - 28px); margin-right: 28px; }
+}
+
 /* ── SCROLLBAR ───────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -749,6 +769,7 @@ html, body {
 
 <!-- Ambient background -->
 <canvas id="bg-canvas"></canvas>
+<div class="touch-gutter" aria-hidden="true"></div>
 
 <!-- Dim overlay (bouton lune) -->
 <div id="dim-overlay"></div>
@@ -769,9 +790,18 @@ html, body {
   <div class="modal" style="position:relative">
     <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
     <h3>Choisir un profil</h3>
+    <p class="intro-text">Somnia vous accompagne vers le sommeil avec des sons doux, calibrés selon votre rythme.</p>
     <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
     <input class="modal-input" id="profile-name-input" type="text" placeholder="Nouveau profil…" maxlength="40"/>
     <button class="btn-primary" id="profile-create-btn">Créer et charger</button>
+    <div class="section-sep" style="padding:14px 0 6px;">
+      <span class="section-sep-label">Minuteur rapide</span><div class="section-sep-line"></div>
+    </div>
+    <div class="timer-chips" id="entry-timer-chips">
+      <button class="chip" data-min="15">15 min</button>
+      <button class="chip" data-min="30">30 min</button>
+      <button class="chip" data-min="45">45 min</button>
+    </div>
   </div>
 </div>
 
@@ -809,8 +839,8 @@ html, body {
   <!-- HEADER -->
   <div class="header">
     <div class="wordmark">
-      <div class="wordmark-title">Somnia</div>
-      <div class="wordmark-sub">Table de mixage ASMR</div>
+      <div class="wordmark-title">SOMNIA</div>
+      <div class="wordmark-sub">S'endormir tout en douceur</div>
     </div>
     <div class="header-actions">
       <button class="hdr-btn" id="btn-dim" title="Réduire la luminosité">🌙</button>
@@ -820,7 +850,7 @@ html, body {
   </div>
 
   <div style="padding: 0 20px 16px; border-bottom: 1px solid var(--border);">
-    <button class="ghost-btn danger" id="btn-stop">⏹ Stop</button>
+    <button class="ghost-btn danger" id="btn-stop" title="OFF">⏻</button>
   </div>
 
   <!-- PAGE: MIX -->
@@ -1517,6 +1547,7 @@ async function handleTrackVolume(id, val) {
     }
   }
   persistCurrentProfileState();
+  updateStopButtonState();
 }
 
 function updateSliderStyle(id, val) {
@@ -1534,6 +1565,13 @@ function updateRowActive(id, val) {
   if (!row) return;
   if (val > 0) row.classList.add('active');
   else         row.classList.remove('active');
+}
+
+function updateStopButtonState() {
+  const hasActive = Object.values(volumes).some(v => v > 0);
+  const btn = document.getElementById('btn-stop');
+  btn.title = hasActive ? 'ON' : 'OFF';
+  btn.style.color = hasActive ? 'var(--accent)' : 'var(--text-dim)';
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1579,6 +1617,7 @@ function buildTrackList() {
     list.appendChild(row);
   }
   persistCurrentProfileState();
+  updateStopButtonState();
 }
 
 // Volume global supprimé: contrôle uniquement par piste
@@ -1595,6 +1634,7 @@ document.getElementById('btn-stop').addEventListener('click', () => {
     updateSliderStyle(s.id, 0);
     updateRowActive(s.id, 0);
   });
+  updateStopButtonState();
   toast('⏹ Tout arrêté');
 });
 
@@ -1639,7 +1679,8 @@ document.getElementById('modal-save').addEventListener('click', () => {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('preset-name-input').value = '';
   renderPresets();
-renderProfilePicker();
+  renderProfilePicker();
+  updateStopButtonState();
   toast(`💾 "${name}" sauvegardé`);
 });
 
@@ -1675,7 +1716,8 @@ function renderPresets() {
         const removed = ps.splice(i, 1)[0];
         savePresets(ps);
         renderPresets();
-renderProfilePicker();
+  renderProfilePicker();
+  updateStopButtonState();
         toast(`🗑 "${removed.name}" supprimé`);
         return;
       }
@@ -1700,31 +1742,20 @@ renderProfilePicker();
 
     list.appendChild(item);
   });
+  updateStopButtonState();
 }
 
 // ─────────────────────────────────────────────────────────────────
 // TIMER
 // ─────────────────────────────────────────────────────────────────
-document.getElementById('timer-chips').addEventListener('click', async (e) => {
-  const chip = e.target.closest('.chip');
-  if (!chip) return;
-
-  // Si timer déjà en cours avec ce chip → annuler
-  const min = parseInt(chip.dataset.min, 10);
-
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-
-  if (!engine.ready) await engine.init();
-
+function startTimer(min, sourceChip) {
+  document.querySelectorAll('#timer-chips .chip, #entry-timer-chips .chip').forEach(c => c.classList.remove('active'));
+  if (sourceChip) sourceChip.classList.add('active');
   clearInterval(timerInterval);
-
-  timerTotal   = min * 60;
-  timerRemain  = timerTotal;
-
+  timerTotal = min * 60;
+  timerRemain = timerTotal;
   document.getElementById('timer-running-row').classList.add('visible');
   updateTimerDisplay();
-
   timerInterval = setInterval(() => {
     timerRemain--;
     updateTimerDisplay();
@@ -1745,6 +1776,17 @@ document.getElementById('timer-chips').addEventListener('click', async (e) => {
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     }
   }, 1000);
+}
+
+document.getElementById('timer-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  startTimer(parseInt(chip.dataset.min, 10), chip);
+});
+document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  startTimer(parseInt(chip.dataset.min, 10), chip);
 });
 
 function updateTimerDisplay() {
@@ -1774,6 +1816,7 @@ function resetAllTracks() {
     updateSliderStyle(s.id, 0);
     updateRowActive(s.id, 0);
   });
+  updateStopButtonState();
 }
 
 function persistCurrentProfileState() {
@@ -1822,6 +1865,7 @@ function renderProfilePicker() {
     });
     list.appendChild(item);
   });
+  updateStopButtonState();
 }
 
 document.getElementById('profile-skip-btn').addEventListener('click', () => {
@@ -1920,6 +1964,7 @@ document.querySelectorAll('.mode-chip').forEach(btn => {
     const mode = btn.dataset.mode;
     if (vasmr) vasmr.setMode(mode);
   });
+  updateStopButtonState();
 });
 
 vasmrOpenBtn.addEventListener('click', async () => {
@@ -1941,6 +1986,7 @@ vasmrOpenBtn.addEventListener('click', async () => {
     vasmr.resize();
     vasmr.start();
   });
+  updateStopButtonState();
 });
 
 vasmrCloseBtn.addEventListener('click', () => {
@@ -2022,6 +2068,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(console.warn);
   });
+  updateStopButtonState();
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2032,7 +2079,8 @@ if ('serviceWorker' in navigator) {
   buildTrackList();
   initAmbient();
   renderPresets();
-renderProfilePicker();
+  renderProfilePicker();
+  updateStopButtonState();
 })();
 </script>
 </body>
