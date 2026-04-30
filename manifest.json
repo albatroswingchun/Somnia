@@ -1,0 +1,36 @@
+{
+  "name": "Somnia — Ambiance & Réveil",
+  "short_name": "Somnia",
+  "description": "Application de réveil et d'ambiance sonore ASMR. Mixez vos sons, dormez mieux.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050810",
+  "theme_color": "#050810",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "health", "music"],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Lancer ambiance aléatoire",
+      "short_name": "Aléatoire",
+      "description": "Lance une ambiance sonore aléatoire",
+      "url": "./index.html?action=random",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "lang": "fr-FR"
+}
