@@ -606,6 +606,19 @@ html, body {
   color: var(--text-hi);
   margin-bottom: 14px;
 }
+.entry-title { font-size: 26px !important; }
+.entry-desc  { font-size: 15px; color: var(--text); line-height: 1.6; margin-bottom: 14px; }
+.entry-enter-btn { width: 100%; max-width: 320px; margin: 0 auto; display: block; }
+.splash-overlay {
+  position: fixed; inset: 0; z-index: 260; background: #000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
+}
+.splash-overlay.visible { opacity: 1; pointer-events: auto; }
+.splash-title {
+  font-family: 'Quicksand', var(--sans);
+  font-size: 42px; letter-spacing: 0.08em; color: #e8edf5;
+}
 
 .modal-input {
   width: 100%;
@@ -759,14 +772,17 @@ html, body {
 <div class="modal-overlay open top" id="profile-modal-overlay">
   <div class="modal" style="position:relative">
     <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
-    <h3>Bienvenue sur Somnia</h3>
-    <p class="intro-text">Crée ton ambiance sonore sur mesure et laisse-toi glisser naturellement vers le sommeil. Une expérience ASMR immersive pensée pour apaiser ton esprit.</p>
+    <h3 class="entry-title">Choisir un profil</h3>
+    <p class="entry-desc">Crée ton ambiance sonore sur mesure et laisse-toi glisser naturellement vers le sommeil. Une expérience ASMR immersive pensée pour apaiser ton esprit.</p>
     <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
-    <input class="modal-input" id="profile-name-input" type="text" placeholder="Nouveau profil…" maxlength="40"/>
-    <button class="btn-primary" id="profile-create-btn">Entrer</button>
-    <div class="section-sep" style="padding:14px 0 6px;">
-      <span class="section-sep-label">Minuteur rapide</span><div class="section-sep-line"></div>
-    </div>
+    <input class="modal-input" id="profile-name-input" type="text" placeholder="Inscris ton nom ici..." maxlength="40"/>
+    <button class="btn-primary entry-enter-btn" id="profile-create-btn">Plonge dans le sommeil.</button>
+  </div>
+</div>
+
+<div class="modal-overlay top" id="entry-timer-modal-overlay">
+  <div class="modal">
+    <h3 class="entry-title">Dans combien de temps souhaites-tu dormir... ?</h3>
     <div class="timer-chips" id="entry-timer-chips">
       <button class="chip" data-min="15">15 min</button>
       <button class="chip" data-min="30">30 min</button>
@@ -774,6 +790,10 @@ html, body {
       <button class="chip" data-min="60">1 h</button>
     </div>
   </div>
+</div>
+
+<div class="splash-overlay" id="entry-splash">
+  <div class="splash-title">Somnia</div>
 </div>
 
 <!-- Save modal -->
@@ -1760,6 +1780,11 @@ document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
   const chip = e.target.closest('.chip');
   if (!chip) return;
   startTimer(parseInt(chip.dataset.min, 10), chip);
+  document.getElementById('entry-timer-modal-overlay').classList.remove('open');
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  const splash = document.getElementById('entry-splash');
+  splash.classList.add('visible');
+  setTimeout(() => splash.classList.remove('visible'), 2000);
 });
 
 function updateTimerDisplay() {
@@ -1866,7 +1891,7 @@ document.getElementById('profile-create-btn').addEventListener('click', () => {
     toast('Bienvenue dans Somnia');
   }
   document.getElementById('profile-name-input').value = '';
-  document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('entry-timer-modal-overlay').classList.add('open');
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {
