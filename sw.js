@@ -3,14 +3,15 @@
 // Stratégie : Cache-First pour assets statiques et fichiers audio
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_STATIC = 'somnia-static-v2.1';
-const CACHE_AUDIO  = 'somnia-audio-v2.1';
+const CACHE_STATIC = 'somnia-static-v2.2';
+const CACHE_AUDIO  = 'somnia-audio-v2.2';
 
 // Assets statiques mis en cache à l'installation
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './assets/audio/library.json',
 ];
 
 // Extensions audio reconnues

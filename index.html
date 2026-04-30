@@ -990,6 +990,20 @@ const SOUNDS = [
   { id:'texture', name:'Texture',          icon:'🧶',   color:'#fdba74', file:'assets/audio/texture.m4a', gen:'texture' },
 ];
 
+
+async function loadSharedAudioLibrary() {
+  try {
+    const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
+    if (!res.ok) return;
+    const db = await res.json();
+    if (!db || !Array.isArray(db.tracks)) return;
+    const map = new Map(db.tracks.filter(t => t && t.id && t.file).map(t => [t.id, t.file]));
+    SOUNDS.forEach(sound => {
+      const sharedFile = map.get(sound.id);
+      if (sharedFile) sound.file = sharedFile;
+    });
+  } catch (_) {}
+}
 // ─────────────────────────────────────────────────────────────────
 // MOTEUR AUDIO
 // ─────────────────────────────────────────────────────────────────
@@ -1496,7 +1510,7 @@ let vasmr     = null;
 const volumes = {};
 SOUNDS.forEach(s => volumes[s.id] = 0);
 
-let masterVal = 8; // 0–10
+const masterVal = 10; // désactivé: pas de volume global
 let dimOn     = false;
 let vasmrOn   = false;
 
@@ -1504,13 +1518,13 @@ let vasmrOn   = false;
 let timerInterval = null;
 let timerTotal    = 0;
 let timerRemain   = 0;
-let savedMaster   = 8;
+const savedMaster   = 10;
 
 // ─────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────
 function toAudioVol(v)  { return v / 10; }      // 0–10 → 0.0–1.0
-function toAudioMaster(v) { return v / 10; }
+function toAudioMaster(v) { return 1; }
 
 function toast(msg, ms = 2200) {
   const el = document.getElementById('toast');
@@ -1611,21 +1625,7 @@ function buildTrackList() {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// MASTER VOLUME
-// ─────────────────────────────────────────────────────────────────
-const masterInput = document.getElementById('master-vol');
-const masterValEl = document.getElementById('master-vol-val');
-
-masterInput.addEventListener('input', async (e) => {
-  masterVal = parseInt(e.target.value, 10);
-  masterValEl.textContent = masterVal;
-  masterInput.style.setProperty('--pct', (masterVal / 10 * 100) + '%');
-  if (!engine.ready) await engine.init();
-  engine.setMasterVolume(toAudioMaster(masterVal));
-});
-// Init style
-masterInput.style.setProperty('--pct', '80%');
+// Volume global supprimé: contrôle uniquement par piste
 
 // ─────────────────────────────────────────────────────────────────
 // STOP ALL
@@ -1701,7 +1701,6 @@ document.getElementById('modal-save').addEventListener('click', () => {
   presets.push({
     name,
     volumes: { ...volumes },
-    masterVal,
     ts: Date.now(),
   });
   savePresets(presets);
@@ -1760,11 +1759,6 @@ function renderPresets() {
         if (val > 0) await engine.startTrack(s.id, toAudioVol(val));
       }
 
-      masterVal = p.masterVal ?? 8;
-      masterInput.value = masterVal;
-      masterValEl.textContent = masterVal;
-      masterInput.style.setProperty('--pct', (masterVal / 10 * 100) + '%');
-      engine.setMasterVolume(toAudioMaster(masterVal));
 
       switchPage('mix');
       toast(`🎵 "${p.name}" chargé`);
@@ -1790,7 +1784,7 @@ document.getElementById('timer-chips').addEventListener('click', async (e) => {
   if (!engine.ready) await engine.init();
 
   clearInterval(timerInterval);
-  savedMaster  = masterVal;
+
   timerTotal   = min * 60;
   timerRemain  = timerTotal;
 
@@ -1820,10 +1814,7 @@ document.getElementById('timer-chips').addEventListener('click', async (e) => {
         updateSliderStyle(s.id, 0);
         updateRowActive(s.id, 0);
       });
-      engine.setMasterVolume(toAudioMaster(savedMaster));
-      masterInput.value = savedMaster;
-      masterValEl.textContent = savedMaster;
-      masterInput.style.setProperty('--pct', (savedMaster / 10 * 100) + '%');
+
       document.getElementById('timer-running-row').classList.remove('visible');
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     }
@@ -1842,10 +1833,7 @@ function updateTimerDisplay() {
 document.getElementById('timer-cancel-btn').addEventListener('click', () => {
   clearInterval(timerInterval);
   timerInterval = null;
-  engine.setMasterVolume(toAudioMaster(savedMaster));
-  masterInput.value = savedMaster;
-  masterValEl.textContent = savedMaster;
-  masterInput.style.setProperty('--pct', (savedMaster / 10 * 100) + '%');
+
   document.getElementById('timer-running-row').classList.remove('visible');
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   toast('⏹ Minuteur annulé');
@@ -2001,9 +1989,12 @@ if ('serviceWorker' in navigator) {
 // ─────────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────────
-buildTrackList();
-initAmbient();
-renderPresets();
+(async function initApp() {
+  await loadSharedAudioLibrary();
+  buildTrackList();
+  initAmbient();
+  renderPresets();
+})();
 </script>
 </body>
 </html>
