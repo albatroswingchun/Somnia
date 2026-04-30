@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#050810"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="description" content="Somnia — Ambiance sonore ASMR & réveil progressif"/>
+<title>Somnia</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400&display=swap" rel="stylesheet"/>
+
+<style>
+/* ── RESET & BASE ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #050810;
+  --bg2:       #090d1a;
+  --surface:   rgba(255,255,255,0.04);
+  --surface2:  rgba(255,255,255,0.07);
+  --border:    rgba(255,255,255,0.06);
+  --text:      #c8cfe0;
+  --text-dim:  #5a6380;
+  --accent:    #7eb8f7;
+  --accent2:   #a78bfa;
+  --glow:      rgba(126,184,247,0.15);
+  --warm:      #f4b97e;
+  --danger:    #f87171;
+  --radius:    16px;
+  --radius-lg: 24px;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans:  'Inter', system-ui, sans-serif;
+  --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+html { height: 100%; background: var(--bg); }
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text);
+  min-height: 100%;
+  background: var(--bg);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── AMBIENT BACKGROUND ────────────────────────────────────── */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 100px;
+  min-height: 100dvh;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 48px 0 24px;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: #fff;
+  font-style: italic;
+}
+
+.logo span {
+  display: block;
+  font-size: 10px;
+  font-style: normal;
+  font-family: var(--font-sans);
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.header-actions { display: flex; gap: 8px; }
+
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: var(--transition);
+  backdrop-filter: blur(8px);
+}
+.icon-btn:hover, .icon-btn.active {
+  color: var(--accent);
+  border-color: rgba(126,184,247,0.3);
+  background: rgba(126,184,247,0.08);
+}
+
+/* ── MASTER VOLUME ──────────────────────────────────────────── */
+.master-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(16px);
+}
+
+.master-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.master-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  min-width: 56px;
+}
+
+.master-slider-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vol-icon { font-size: 16px; opacity: 0.5; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px rgba(126,184,247,0.5);
+  margin-top: -8px;
+  transition: box-shadow 0.2s;
+}
+
+input[type=range]:active::-webkit-slider-thumb {
+  box-shadow: 0 0 20px rgba(126,184,247,0.8);
+}
+
+#master-vol {
+  flex: 1;
+  background: linear-gradient(to right, var(--accent) var(--pct,70%), var(--border) var(--pct,70%));
+}
+
+.master-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.pill-btn {
+  flex: 1;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  backdrop-filter: blur(8px);
+}
+
+.pill-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(126,184,247,0.06);
+}
+
+.pill-btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(248,113,113,0.06);
+}
+
+/* ── SOUND CARDS ────────────────────────────────────────────── */
+.section-title {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 24px 0 12px;
+}
+
+.sounds-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sound-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.sound-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, var(--card-glow, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.6s;
+  pointer-events: none;
+}
+
+.sound-card.active {
+  border-color: rgba(126,184,247,0.25);
+  background: rgba(126,184,247,0.06);
+}
+.sound-card.active::before { opacity: 1; }
+
+.sound-card.active .sound-icon { transform: scale(1.1); }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sound-icon {
+  font-size: 28px;
+  line-height: 1;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.toggle-pill {
+  width: 36px; height: 20px;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.toggle-pill::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  top: 2px; left: 2px;
+  transition: var(--transition);
+}
+
+.sound-card.active .toggle-pill {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.sound-card.active .toggle-pill::after {
+  left: 18px;
+  background: #fff;
+}
+
+.sound-name {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+/* circular knob */
+.knob-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0 0;
+}
+
+.knob-container {
+  position: relative;
+  width: 56px; height: 56px;
+  cursor: grab;
+}
+.knob-container:active { cursor: grabbing; }
+
+.knob-svg { position: absolute; inset: 0; }
+
+.knob-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.sound-card.active .knob-value { color: var(--accent); }
+
+/* active pulse ring */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.sound-card.active .sound-icon::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  animation: pulse-ring 2s ease-out infinite;
+}
+.sound-icon { position: relative; display: inline-block; }
+
+/* ── TIMER SECTION ──────────────────────────────────────────── */
+.timer-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-top: 8px;
+  backdrop-filter: blur(16px);
+}
+
+.timer-title {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.active { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 500; }
+
+.timer-countdown {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  font-weight: 300;
+  color: #fff;
+  letter-spacing: 0.05em;
+  text-align: center;
+  margin: 16px 0 8px;
+  display: none;
+}
+.timer-countdown.visible { display: block; }
+
+.timer-cancel {
+  display: none;
+  width: 100%;
+  margin-top: 8px;
+}
+.timer-countdown.visible + .timer-cancel { display: block; }
+
+/* ── ALARM SECTION ──────────────────────────────────────────── */
+.alarm-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-top: 12px;
+  backdrop-filter: blur(16px);
+}
+
+.alarm-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.time-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 300;
+  padding: 8px 12px;
+  outline: none;
+  width: 140px;
+  text-align: center;
+  letter-spacing: 0.05em;
+  transition: var(--transition);
+}
+.time-input:focus { border-color: var(--accent); background: rgba(126,184,247,0.06); }
+
+.alarm-arm-btn {
+  flex: 1;
+  height: 50px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.alarm-arm-btn:hover { border-color: var(--warm); color: var(--warm); background: rgba(244,185,126,0.06); }
+.alarm-arm-btn.armed { background: rgba(244,185,126,0.1); border-color: var(--warm); color: var(--warm); }
+
+.alarm-status {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 10px;
+  min-height: 16px;
+  letter-spacing: 0.05em;
+}
+
+/* ── PRESETS ────────────────────────────────────────────────── */
+.presets-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-top: 12px;
+  backdrop-filter: blur(16px);
+}
+
+.presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.preset-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.preset-item:hover { border-color: rgba(126,184,247,0.3); background: rgba(126,184,247,0.05); }
+
+.preset-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.preset-del {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: var(--transition);
+}
+.preset-del:hover { border-color: var(--danger); color: var(--danger); }
+
+.empty-presets {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 16px 0;
+  font-style: italic;
+}
+
+/* ── BOTTOM NAV ─────────────────────────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px 20px;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+}
+
+.nav-inner {
+  display: flex;
+  gap: 4px;
+  background: rgba(9,13,26,0.8);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px;
+  backdrop-filter: blur(20px);
+}
+
+.nav-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; gap: 6px;
+}
+.nav-btn.active {
+  background: var(--surface2);
+  color: #fff;
+}
+
+/* ── PAGE SYSTEM ─────────────────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── SAVE MODAL ─────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,8,16,0.8);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: flex-end;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #0d1324;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.modal h3 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 300;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.modal-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 12px 16px;
+  outline: none;
+  margin-bottom: 16px;
+  transition: var(--transition);
+}
+.modal-input:focus { border-color: var(--accent); }
+
+.modal-actions { display: flex; gap: 8px; }
+
+.btn-primary {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+.btn-secondary {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+
+/* ── NIGHT MODE ─────────────────────────────────────────────── */
+body.night-mode {
+  --text: #8090b0;
+  --text-dim: #3a4060;
+  --surface: rgba(255,255,255,0.02);
+  --surface2: rgba(255,255,255,0.04);
+}
+body.night-mode * { animation-duration: 3s !important; }
+body.night-mode .logo, body.night-mode .timer-countdown { opacity: 0.6; }
+
+/* ── LIGHT HALO ─────────────────────────────────────────────── */
+#light-halo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s;
+}
+#light-halo.active { opacity: 1; }
+
+/* ── TOAST ──────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(9,13,26,0.95);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 12px;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  z-index: 300;
+  opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── WAVEFORM ANIM ──────────────────────────────────────────── */
+.wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.sound-card.active .wave-bars { opacity: 1; }
+
+.wave-bar {
+  width: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  animation: wave-dance 0.8s ease-in-out infinite alternate;
+  opacity: 0.6;
+}
+.wave-bar:nth-child(1) { animation-delay: 0s; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { animation-delay: 0.15s; }
+.wave-bar:nth-child(5) { animation-delay: 0.05s; }
+
+@keyframes wave-dance {
+  from { height: 3px; }
+  to { height: 12px; }
+}
+
+/* ── SCROLLBAR ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media(min-width: 520px) {
+  .sounds-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Light halo overlay -->
+<canvas id="light-halo"></canvas>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Save preset modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3>Sauvegarder l'ambiance</h3>
+    <input class="modal-input" id="preset-name-input" type="text" placeholder="Ex: Nuit de pluie..." maxlength="40"/>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modal-cancel">Annuler</button>
+      <button class="btn-primary" id="modal-save">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="logo">
+      Somnia
+      <span>Ambiance & Réveil</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-night" title="Mode nuit">🌙</button>
+      <button class="icon-btn" id="btn-light" title="Lumière ambiante">💡</button>
+    </div>
+  </div>
+
+  <!-- ── PAGE: MIX ── -->
+  <div class="page active" id="page-mix">
+
+    <!-- Master -->
+    <div class="master-section">
+      <div class="master-row">
+        <span class="master-label">Volume</span>
+        <div class="master-slider-wrap">
+          <span class="vol-icon">🔈</span>
+          <input type="range" id="master-vol" min="0" max="100" value="70"/>
+          <span class="vol-icon">🔊</span>
+        </div>
+      </div>
+      <div class="master-actions">
+        <button class="pill-btn" id="btn-random">🎲 Aléatoire</button>
+        <button class="pill-btn" id="btn-save">💾 Sauvegarder</button>
+        <button class="pill-btn danger" id="btn-stop">⏹ Tout arrêter</button>
+      </div>
+    </div>
+
+    <div class="section-title">Sons</div>
+
+    <!-- Sound cards (generated by JS) -->
+    <div class="sounds-grid" id="sounds-grid"></div>
+
+    <!-- Sleep timer -->
+    <div class="section-title" style="margin-top:28px">Minuteur d'endormissement</div>
+    <div class="timer-section">
+      <div class="timer-chips" id="timer-chips">
+        <button class="chip" data-min="15">15 min</button>
+        <button class="chip" data-min="30">30 min</button>
+        <button class="chip" data-min="45">45 min</button>
+        <button class="chip" data-min="60">1 heure</button>
+      </div>
+      <div class="timer-countdown" id="timer-countdown"></div>
+      <button class="pill-btn danger timer-cancel" id="timer-cancel">Annuler le minuteur</button>
+    </div>
+
+    <!-- Alarm -->
+    <div class="section-title" style="margin-top:16px">Réveil progressif</div>
+    <div class="alarm-section">
+      <div class="alarm-row">
+        <input type="time" class="time-input" id="alarm-time" value="07:00"/>
+        <button class="alarm-arm-btn" id="alarm-arm-btn">
+          <span>🔔</span> Armer le réveil
+        </button>
+      </div>
+      <div class="alarm-status" id="alarm-status"></div>
+    </div>
+
+  </div><!-- end page-mix -->
+
+  <!-- ── PAGE: PRESETS ── -->
+  <div class="page" id="page-presets">
+    <div style="padding-top:24px">
+      <div class="section-title">Presets sauvegardés</div>
+      <div class="presets-section">
+        <div class="presets-list" id="presets-list"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<!-- Bottom nav -->
+<div class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-page="mix" id="nav-mix">🎛 Mix</button>
+    <button class="nav-btn" data-page="presets" id="nav-presets">📁 Presets</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   SOMNIA — Audio Engine + UI
+   ════════════════════════════════════════════════════════════════ */
+
+// ── SOUND DEFINITIONS ──────────────────────────────────────────
+const SOUNDS = [
+  { id:'rain',    name:'Pluie douce',      icon:'🌧',  color:'#7eb8f7', generate:'rain'      },
+  { id:'thunder', name:'Orage lointain',   icon:'⛈',   color:'#a78bfa', generate:'thunder'   },
+  { id:'wind',    name:'Vent léger',       icon:'🌬',   color:'#a0d4b0', generate:'wind'      },
+  { id:'forest',  name:'Forêt nocturne',   icon:'🌲',   color:'#4ade80', generate:'forest'    },
+  { id:'birds',   name:'Oiseaux du matin', icon:'🐦',   color:'#fbbf24', generate:'birds'     },
+  { id:'river',   name:'Rivière',          icon:'💧',   color:'#38bdf8', generate:'river'     },
+  { id:'fire',    name:'Feu de cheminée',  icon:'🔥',   color:'#fb923c', generate:'fire'      },
+  { id:'white',   name:'Bruit blanc',      icon:'📻',   color:'#e2e8f0', generate:'white'     },
+  { id:'taps',    name:'Taps ASMR',        icon:'✋',   color:'#f9a8d4', generate:'taps'      },
+  { id:'bowl',    name:'Bols tibétains',   icon:'🔔',   color:'#fde68a', generate:'bowl'      },
+  { id:'breath',  name:'Respiration',      icon:'🫁',   color:'#c4b5fd', generate:'breath'    },
+  { id:'texture', name:'Texture douce',    icon:'🧶',   color:'#fdba74', generate:'texture'   },
+];
+
+// ── AUDIO ENGINE ───────────────────────────────────────────────
+class AudioMixer {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.tracks = {};
+    this.masterVolume = 0.7;
+    this.initialized = false;
+  }
+
+  async init() {
+    if (this.initialized) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = this.masterVolume;
+    this.masterGain.connect(this.ctx.destination);
+    this.initialized = true;
+  }
+
+  async resume() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      await this.ctx.resume();
+    }
+  }
+
+  // ── SOUND GENERATORS ────────────────────────────────────────
+  generateBuffer(type, duration = 4) {
+    const sr = this.ctx.sampleRate;
+    const len = sr * duration;
+    const buf = this.ctx.createBuffer(2, len, sr);
+
+    const L = buf.getChannelData(0);
+    const R = buf.getChannelData(1);
+
+    // Helpers
+    const noise = () => Math.random() * 2 - 1;
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    // Simple one-pole lowpass
+    function lowpass(data, cutoff) {
+      const rc = 1 - cutoff;
+      let s = 0;
+      for (let i = 0; i < data.length; i++) {
+        s = s * rc + data[i] * (1 - rc);
+        data[i] = s;
+      }
+    }
+
+    // Bandpass via two lowpasses
+    function bandpass(data, lo, hi) {
+      const a = [...data], b = [...data];
+      lowpass(a, lo); lowpass(b, hi);
+      for (let i = 0; i < data.length; i++) data[i] = b[i] - a[i];
+    }
+
+    switch(type) {
+      case 'rain': case 'white': {
+        for (let i = 0; i < len; i++) {
+          L[i] = noise() * 0.35;
+          R[i] = noise() * 0.35;
+        }
+        if (type === 'rain') {
+          lowpass(L, 0.08); lowpass(R, 0.08);
+          // add occasional drip spikes
+          for (let i = 0; i < len; i++) {
+            if (Math.random() < 0.0008) {
+              const spike = noise() * 0.6;
+              const pos = i;
+              for (let j = 0; j < 40 && pos+j < len; j++) {
+                L[pos+j] += spike * Math.exp(-j * 0.15);
+                R[pos+j] += spike * 0.8 * Math.exp(-j * 0.15);
+              }
+            }
+          }
+        }
+        break;
+      }
+
+      case 'wind': {
+        for (let i = 0; i < len; i++) {
+          L[i] = noise(); R[i] = noise();
+        }
+        lowpass(L, 0.04); lowpass(R, 0.04);
+        // slow amplitude modulation
+        for (let i = 0; i < len; i++) {
+          const mod = 0.5 + 0.5 * Math.sin(i / sr * 0.3 + Math.random() * 0.001);
+          L[i] *= mod * 0.5;
+          R[i] *= mod * 0.5;
+        }
+        break;
+      }
+
+      case 'thunder': {
+        // mostly silence with rumbles
+        for (let i = 0; i < len; i++) {
+          L[i] = noise() * 0.02; R[i] = noise() * 0.02;
+        }
+        lowpass(L, 0.015); lowpass(R, 0.015);
+        // 1-3 rumbles
+        const numRumbles = 1 + Math.floor(Math.random() * 2);
+        for (let r = 0; r < numRumbles; r++) {
+          const start = Math.floor(Math.random() * (len * 0.6) + len * 0.1);
+          const rumbleLen = Math.floor(sr * (0.4 + Math.random() * 0.8));
+          for (let i = 0; i < rumbleLen && start+i < len; i++) {
+            const env = Math.sin(Math.PI * i / rumbleLen);
+            const n = noise() * env * 0.7;
+            L[start+i] += n;
+            R[start+i] += n * 0.9 + noise() * 0.05 * env;
+          }
+        }
+        lowpass(L, 0.04); lowpass(R, 0.04);
+        break;
+      }
+
+      case 'river': {
+        for (let i = 0; i < len; i++) {
+          L[i] = noise(); R[i] = noise();
+        }
+        // mid-range bandpass = babbling water feel
+        bandpass(L, 0.03, 0.15); bandpass(R, 0.03, 0.15);
+        for (let i = 0; i < len; i++) { L[i] *= 0.4; R[i] *= 0.4; }
+        break;
+      }
+
+      case 'forest': {
+        // subtle low drone + sparse chirps
+        for (let i = 0; i < len; i++) {
+          L[i] = noise() * 0.05; R[i] = noise() * 0.05;
+        }
+        lowpass(L, 0.02); lowpass(R, 0.02);
+        // chirps
+        for (let c = 0; c < 8; c++) {
+          const freq = 2000 + Math.random() * 2000;
+          const start = Math.floor(Math.random() * len);
+          const chirpLen = Math.floor(sr * 0.05);
+          for (let i = 0; i < chirpLen && start+i < len; i++) {
+            const env = Math.sin(Math.PI * i / chirpLen);
+            const sig = Math.sin(2 * Math.PI * freq * i / sr) * env * 0.12;
+            L[start+i] += sig; R[start+i] += sig * 0.8;
+          }
+        }
+        break;
+      }
+
+      case 'birds': {
+        for (let i = 0; i < len; i++) {
+          L[i] = noise() * 0.02; R[i] = noise() * 0.02;
+        }
+        // melodic chirp sequences
+        const freqs = [2200,2800,3100,2500,1800,3400];
+        for (let c = 0; c < 12; c++) {
+          const freq = freqs[Math.floor(Math.random() * freqs.length)];
+          const start = Math.floor(Math.random() * (len - sr * 0.2));
+          const chirpLen = Math.floor(sr * (0.08 + Math.random() * 0.12));
+          const freqSlide = freq * (0.9 + Math.random() * 0.3);
+          for (let i = 0; i < chirpLen && start+i < len; i++) {
+            const t = i / chirpLen;
+            const env = Math.sin(Math.PI * t);
+            const f = lerp(freq, freqSlide, t);
+            const sig = Math.sin(2 * Math.PI * f * i / sr) * env * 0.18;
+            L[start+i] += sig + noise() * 0.01;
+            R[start+i] += sig * 0.7 + noise() * 0.01;
+          }
+        }
+        break;
+      }
+
+      case 'fire': {
+        for (let i = 0; i < len; i++) {
+          L[i] = noise(); R[i] = noise();
+        }
+        lowpass(L, 0.05); lowpass(R, 0.05);
+        // crackle pops
+        for (let i = 0; i < len; i++) {
+          if (Math.random() < 0.001) {
+            const amp = 0.3 + Math.random() * 0.4;
+            const decayLen = Math.floor(30 + Math.random() * 80);
+            for (let j = 0; j < decayLen && i+j < len; j++) {
+              L[i+j] += noise() * amp * Math.exp(-j * 0.08);
+              R[i+j] += noise() * amp * 0.8 * Math.exp(-j * 0.08);
+            }
+          }
+          L[i] *= 0.4; R[i] *= 0.4;
+        }
+        break;
+      }
+
+      case 'taps': {
+        // periodic gentle taps
+        for (let i = 0; i < len; i++) {
+          L[i] = noise() * 0.01; R[i] = noise() * 0.01;
+        }
+        const tapInterval = Math.floor(sr * (0.6 + Math.random() * 0.8));
+        for (let t = 0; t < len; t += tapInterval) {
+          const tapLen = Math.floor(sr * 0.04);
+          const amp = 0.2 + Math.random() * 0.25;
+          const side = Math.random() > 0.5 ? 1 : -1;
+          for (let i = 0; i < tapLen && t+i < len; i++) {
+            const env = Math.exp(-i * 0.15);
+            const sig = noise() * amp * env;
+            L[t+i] += sig + sig * 0.3 * side;
+            R[t+i] += sig - sig * 0.3 * side;
+          }
+          // slight delay variation
+          t += Math.floor((Math.random() - 0.5) * sr * 0.2);
+        }
+        break;
+      }
+
+      case 'bowl': {
+        // decaying sine tones
+        const baseFreq = 200 + Math.random() * 80;
+        for (let i = 0; i < len; i++) {
+          L[i] = 0; R[i] = 0;
+        }
+        // strike at start and maybe midway
+        const strikes = [0, Math.floor(len * 0.5)];
+        for (const start of strikes) {
+          const decayTime = sr * 2.5;
+          for (let i = 0; i < decayTime && start+i < len; i++) {
+            const env = Math.exp(-i / (sr * 2.5));
+            // fundamental + 2nd harmonic (slightly detuned for bowl shimmer)
+            const sig = (
+              Math.sin(2*Math.PI*baseFreq*i/sr) * env * 0.4 +
+              Math.sin(2*Math.PI*baseFreq*2.76*i/sr) * env * 0.15 +
+              Math.sin(2*Math.PI*baseFreq*5.4*i/sr) * env * 0.06
+            );
+            L[start+i] += sig;
+            R[start+i] += sig * 0.85 + Math.sin(2*Math.PI*(baseFreq+1.5)*i/sr) * env * 0.15;
+          }
+        }
+        break;
+      }
+
+      case 'breath': {
+        // slow sinusoidal amplitude modulated noise = breathing
+        const cycleLen = sr * 4; // 4s breath cycle
+        for (let i = 0; i < len; i++) {
+          const breathEnv = 0.3 + 0.7 * Math.pow(Math.sin(Math.PI * i / cycleLen), 2);
+          L[i] = noise() * breathEnv * 0.35;
+          R[i] = noise() * breathEnv * 0.35;
+        }
+        lowpass(L, 0.06); lowpass(R, 0.06);
+        break;
+      }
+
+      case 'texture': {
+        // slow filtered noise swells
+        for (let i = 0; i < len; i++) {
+          L[i] = noise(); R[i] = noise();
+        }
+        lowpass(L, 0.03); lowpass(R, 0.03);
+        for (let i = 0; i < len; i++) {
+          const mod = 0.4 + 0.6 * Math.abs(Math.sin(i / sr * 0.15));
+          L[i] *= mod * 0.35;
+          R[i] *= mod * 0.35;
+        }
+        break;
+      }
+    }
+
+    return buf;
+  }
+
+  async loadTrack(sound) {
+    if (this.tracks[sound.id]) return;
+    const buf = this.generateBuffer(sound.generate, 6);
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.value = 0.75;
+    gainNode.connect(this.masterGain);
+
+    this.tracks[sound.id] = {
+      buffer: buf,
+      gainNode,
+      source: null,
+      volume: 0.75,
+      active: false,
+    };
+  }
+
+  startTrack(id) {
+    const track = this.tracks[id];
+    if (!track || track.active) return;
+    const src = this.ctx.createBufferSource();
+    src.buffer = track.buffer;
+    src.loop = true;
+    src.loopStart = 0;
+    src.loopEnd = track.buffer.duration;
+    src.connect(track.gainNode);
+    // fade in
+    track.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+    track.gainNode.gain.linearRampToValueAtTime(track.volume, this.ctx.currentTime + 0.8);
+    src.start(0);
+    track.source = src;
+    track.active = true;
+  }
+
+  stopTrack(id, immediate = false) {
+    const track = this.tracks[id];
+    if (!track || !track.active) return;
+    const src = track.source;
+    if (immediate) {
+      try { src.stop(); } catch(e) {}
+    } else {
+      track.gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.0);
+      setTimeout(() => { try { src.stop(); } catch(e) {} }, 1100);
+    }
+    track.source = null;
+    track.active = false;
+  }
+
+  setTrackVolume(id, vol) {
+    const track = this.tracks[id];
+    if (!track) return;
+    track.volume = vol;
+    if (track.active) {
+      track.gainNode.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.1);
+    }
+  }
+
+  setMasterVolume(vol) {
+    this.masterVolume = vol;
+    if (this.masterGain) {
+      this.masterGain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.1);
+    }
+  }
+
+  fadeMasterTo(target, durationSec) {
+    if (!this.masterGain) return;
+    this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.masterGain.gain.linearRampToValueAtTime(target, this.ctx.currentTime + durationSec);
+  }
+
+  stopAll() {
+    for (const id of Object.keys(this.tracks)) {
+      this.stopTrack(id);
+    }
+  }
+
+  getState() {
+    const state = {};
+    for (const [id, t] of Object.entries(this.tracks)) {
+      state[id] = { active: t.active, volume: t.volume };
+    }
+    return state;
+  }
+
+  loadState(state) {
+    for (const [id, s] of Object.entries(state)) {
+      const track = this.tracks[id];
+      if (!track) continue;
+      if (s.active && !track.active) this.startTrack(id);
+      if (!s.active && track.active) this.stopTrack(id, true);
+      this.setTrackVolume(id, s.volume);
+    }
+  }
+}
+
+// ── GLOBAL STATE ───────────────────────────────────────────────
+const mixer = new AudioMixer();
+let audioReady = false;
+let timerInterval = null;
+let timerSeconds = 0;
+let alarmInterval = null;
+let alarmArmed = false;
+let alarmTime = '';
+let nightMode = false;
+let lightMode = false;
+const cardEls = {};
+const knobStates = {};
+
+// ── PRESETS ────────────────────────────────────────────────────
+function loadPresets() { return JSON.parse(localStorage.getItem('somnia_presets') || '[]'); }
+function savePresets(p) { localStorage.setItem('somnia_presets', JSON.stringify(p)); }
+
+// ── UI HELPERS ─────────────────────────────────────────────────
+function showToast(msg, duration = 2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── ENSURE AUDIO INIT ──────────────────────────────────────────
+async function ensureAudio() {
+  if (audioReady) { await mixer.resume(); return; }
+  await mixer.init();
+  // Pre-generate all track buffers
+  for (const s of SOUNDS) {
+    await mixer.loadTrack(s);
+  }
+  audioReady = true;
+}
+
+// ── KNOB LOGIC ─────────────────────────────────────────────────
+function buildKnob(soundId, initialVol, onChange) {
+  const R_OUTER = 26, R_INNER = 18, CX = 28, CY = 28;
+  const START_ANGLE = -225 * Math.PI/180;
+  const RANGE = 270 * Math.PI/180;
+
+  const container = document.createElement('div');
+  container.className = 'knob-container';
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 56 56');
+  svg.classList.add('knob-svg');
+
+  const trackCircle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  trackCircle.setAttribute('cx', CX); trackCircle.setAttribute('cy', CY);
+  trackCircle.setAttribute('r', R_OUTER);
+  trackCircle.setAttribute('fill','none');
+  trackCircle.setAttribute('stroke','rgba(255,255,255,0.06)');
+  trackCircle.setAttribute('stroke-width','4');
+  svg.appendChild(trackCircle);
+
+  // arc
+  function polarToXY(angle) {
+    return { x: CX + R_OUTER * Math.cos(angle), y: CY + R_OUTER * Math.sin(angle) };
+  }
+  const arcPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+  arcPath.setAttribute('fill','none');
+  arcPath.setAttribute('stroke-width','4');
+  arcPath.setAttribute('stroke-linecap','round');
+  svg.appendChild(arcPath);
+
+  // dot
+  const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('r','4');
+  dot.setAttribute('fill','white');
+  svg.appendChild(dot);
+
+  container.appendChild(svg);
+
+  const valEl = document.createElement('div');
+  valEl.className = 'knob-value';
+  container.appendChild(valEl);
+
+  let vol = initialVol;
+  knobStates[soundId] = vol;
+
+  function update(v, color) {
+    vol = Math.max(0, Math.min(1, v));
+    knobStates[soundId] = vol;
+    const angle = START_ANGLE + RANGE * vol;
+    const end = polarToXY(angle);
+    const startPt = polarToXY(START_ANGLE);
+    const large = RANGE * vol > Math.PI ? 1 : 0;
+    arcPath.setAttribute('d', vol < 0.01
+      ? `M ${startPt.x} ${startPt.y}`
+      : `M ${startPt.x} ${startPt.y} A ${R_OUTER} ${R_OUTER} 0 ${large} 1 ${end.x} ${end.y}`);
+    arcPath.setAttribute('stroke', color || 'rgba(126,184,247,0.9)');
+    dot.setAttribute('cx', end.x);
+    dot.setAttribute('cy', end.y);
+    dot.setAttribute('fill', color || 'rgba(126,184,247,0.9)');
+    valEl.textContent = Math.round(vol * 100);
+    onChange(vol);
+  }
+
+  // drag
+  let dragging = false, startY = 0, startVol = vol;
+  function onStart(e) {
+    dragging = true;
+    startY = (e.touches ? e.touches[0].clientY : e.clientY);
+    startVol = vol;
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const delta = -(y - startY) / 120;
+    const color = document.getElementById(soundId+'-card')?.dataset.color;
+    update(startVol + delta, color);
+  }
+  function onEnd() { dragging = false; }
+
+  container.addEventListener('mousedown', onStart);
+  container.addEventListener('touchstart', onStart, { passive: false });
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup', onEnd);
+  window.addEventListener('touchend', onEnd);
+
+  // Init draw
+  setTimeout(() => update(vol, null), 0);
+
+  container.updateColor = (c) => update(vol, c);
+  container.setValue = (v, c) => update(v, c);
+
+  return container;
+}
+
+// ── BUILD SOUND CARDS ──────────────────────────────────────────
+function buildSoundCards() {
+  const grid = document.getElementById('sounds-grid');
+  for (const sound of SOUNDS) {
+    const card = document.createElement('div');
+    card.className = 'sound-card';
+    card.id = sound.id + '-card';
+    card.dataset.color = sound.color;
+    card.style.setProperty('--card-glow', sound.color + '22');
+
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="sound-icon">${sound.icon}</span>
+        <div class="toggle-pill"></div>
+      </div>
+      <div class="sound-name">${sound.name}</div>
+      <div class="wave-bars">
+        <div class="wave-bar" style="height:6px"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar" style="height:8px"></div>
+        <div class="wave-bar" style="height:4px"></div>
+        <div class="wave-bar" style="height:10px"></div>
+      </div>
+      <div class="knob-wrap" id="${sound.id}-knob-wrap"></div>
+    `;
+
+    // Knob
+    const knobEl = buildKnob(sound.id, 0.75, (vol) => {
+      mixer.setTrackVolume(sound.id, vol);
+    });
+    card.querySelector(`#${sound.id}-knob-wrap`).appendChild(knobEl);
+
+    // Toggle
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.knob-container')) return;
+      toggleSound(sound.id, card, knobEl, sound.color);
+    });
+
+    cardEls[sound.id] = card;
+    grid.appendChild(card);
+  }
+}
+
+async function toggleSound(id, card, knobEl, color) {
+  await ensureAudio();
+  const track = mixer.tracks[id];
+  if (track.active) {
+    mixer.stopTrack(id);
+    card.classList.remove('active');
+    knobEl.updateColor && knobEl.updateColor(null);
+  } else {
+    mixer.startTrack(id);
+    card.classList.add('active');
+    knobEl.updateColor && knobEl.updateColor(color);
+    updateLightColor(color);
+  }
+}
+
+// ── MASTER VOLUME ──────────────────────────────────────────────
+const masterInput = document.getElementById('master-vol');
+masterInput.addEventListener('input', async () => {
+  await ensureAudio();
+  const val = masterInput.value / 100;
+  mixer.setMasterVolume(val);
+  masterInput.style.setProperty('--pct', masterInput.value + '%');
+});
+masterInput.style.setProperty('--pct', '70%');
+
+// ── STOP ALL ───────────────────────────────────────────────────
+document.getElementById('btn-stop').addEventListener('click', async () => {
+  await ensureAudio();
+  mixer.stopAll();
+  for (const id of Object.keys(cardEls)) {
+    cardEls[id].classList.remove('active');
+  }
+  showToast('⏹ Tout arrêté');
+});
+
+// ── RANDOM AMBIANCE ────────────────────────────────────────────
+document.getElementById('btn-random').addEventListener('click', async () => {
+  await ensureAudio();
+  mixer.stopAll();
+  for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
+
+  const count = 2 + Math.floor(Math.random() * 3);
+  const shuffled = [...SOUNDS].sort(() => Math.random() - 0.5).slice(0, count);
+  for (const s of shuffled) {
+    mixer.startTrack(s.id);
+    const knobWrap = document.getElementById(s.id + '-knob-wrap');
+    const knob = knobWrap?.querySelector('.knob-container');
+    cardEls[s.id].classList.add('active');
+    if (knob?.updateColor) knob.updateColor(s.color);
+  }
+  showToast('🎲 Ambiance aléatoire lancée');
+  updateLightFromActive();
+});
+
+// ── SAVE PRESET ────────────────────────────────────────────────
+document.getElementById('btn-save').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('preset-name-input').focus();
+});
+
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.remove('open');
+});
+
+document.getElementById('modal-save').addEventListener('click', () => {
+  const name = document.getElementById('preset-name-input').value.trim() || 'Ambiance sans titre';
+  const state = mixer.getState();
+  const presets = loadPresets();
+  presets.push({ name, state, masterVol: masterInput.value });
+  savePresets(presets);
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('preset-name-input').value = '';
+  renderPresets();
+  showToast(`💾 "${name}" sauvegardé`);
+});
+
+// ── PRESETS ────────────────────────────────────────────────────
+function renderPresets() {
+  const list = document.getElementById('presets-list');
+  const presets = loadPresets();
+  if (presets.length === 0) {
+    list.innerHTML = '<div class="empty-presets">Aucun preset sauvegardé.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  presets.forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'preset-item';
+    item.innerHTML = `
+      <span style="font-size:18px">🎵</span>
+      <span class="preset-name">${p.name}</span>
+      <button class="preset-del" data-i="${i}" title="Supprimer">✕</button>
+    `;
+    item.addEventListener('click', async (e) => {
+      if (e.target.closest('.preset-del')) {
+        const idx = parseInt(e.target.closest('.preset-del').dataset.i);
+        const ps = loadPresets();
+        const removed = ps.splice(idx, 1)[0];
+        savePresets(ps);
+        renderPresets();
+        showToast(`🗑 "${removed.name}" supprimé`);
+        return;
+      }
+      await ensureAudio();
+      mixer.stopAll();
+      for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
+      mixer.loadState(p.state);
+      for (const [id, s] of Object.entries(p.state)) {
+        if (s.active) {
+          cardEls[id]?.classList.add('active');
+          const sound = SOUNDS.find(x => x.id === id);
+          if (sound) {
+            const knobWrap = document.getElementById(id + '-knob-wrap');
+            const knob = knobWrap?.querySelector('.knob-container');
+            if (knob?.updateColor) knob.updateColor(sound.color);
+            if (knob?.setValue) knob.setValue(s.volume, sound.color);
+          }
+        }
+      }
+      masterInput.value = p.masterVol || 70;
+      masterInput.style.setProperty('--pct', (p.masterVol || 70) + '%');
+      mixer.setMasterVolume((p.masterVol || 70) / 100);
+      showToast(`🎵 "${p.name}" chargé`);
+      // Switch to mix page
+      switchPage('mix');
+    });
+    list.appendChild(item);
+  });
+}
+
+// ── SLEEP TIMER ────────────────────────────────────────────────
+document.getElementById('timer-chips').addEventListener('click', async (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  await ensureAudio();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  clearInterval(timerInterval);
+  timerSeconds = parseInt(chip.dataset.min) * 60;
+  updateTimerDisplay();
+  const countdown = document.getElementById('timer-countdown');
+  countdown.classList.add('visible');
+  const originalMaster = mixer.masterVolume;
+
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    // Progressive fade in last 2 minutes
+    if (timerSeconds <= 120) {
+      const fadePct = timerSeconds / 120;
+      mixer.setMasterVolume(originalMaster * fadePct);
+      masterInput.value = Math.round(originalMaster * fadePct * 100);
+      masterInput.style.setProperty('--pct', masterInput.value + '%');
+    }
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      mixer.stopAll();
+      for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
+      countdown.classList.remove('visible');
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      mixer.setMasterVolume(originalMaster);
+      masterInput.value = Math.round(originalMaster * 100);
+      masterInput.style.setProperty('--pct', masterInput.value + '%');
+    }
+  }, 1000);
+});
+
+document.getElementById('timer-cancel').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timerSeconds = 0;
+  document.getElementById('timer-countdown').classList.remove('visible');
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+});
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  document.getElementById('timer-countdown').textContent =
+    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ── ALARM ──────────────────────────────────────────────────────
+document.getElementById('alarm-arm-btn').addEventListener('click', async () => {
+  const timeVal = document.getElementById('alarm-time').value;
+  if (!timeVal) return;
+  alarmTime = timeVal;
+  alarmArmed = !alarmArmed;
+  const btn = document.getElementById('alarm-arm-btn');
+  const status = document.getElementById('alarm-status');
+  if (alarmArmed) {
+    btn.classList.add('armed');
+    btn.innerHTML = '<span>🔔</span> Réveil armé';
+    status.textContent = `⏰ Réveil programmé à ${alarmTime} — montée progressive du volume`;
+    startAlarmChecker();
+  } else {
+    btn.classList.remove('armed');
+    btn.innerHTML = '<span>🔔</span> Armer le réveil';
+    status.textContent = '';
+    clearInterval(alarmInterval);
+  }
+});
+
+function startAlarmChecker() {
+  clearInterval(alarmInterval);
+  alarmInterval = setInterval(async () => {
+    if (!alarmArmed) return;
+    const now = new Date();
+    const cur = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    if (cur === alarmTime) {
+      alarmArmed = false;
+      clearInterval(alarmInterval);
+      const btn = document.getElementById('alarm-arm-btn');
+      btn.classList.remove('armed');
+      btn.innerHTML = '<span>🔔</span> Armer le réveil';
+      document.getElementById('alarm-status').textContent = '🌅 Réveil en cours...';
+      await ensureAudio();
+      // Wake with birds + gentle sounds
+      mixer.stopAll();
+      for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
+      mixer.setMasterVolume(0);
+      const wakeIds = ['birds','river'];
+      for (const id of wakeIds) {
+        if (mixer.tracks[id]) {
+          mixer.startTrack(id);
+          cardEls[id]?.classList.add('active');
+        }
+      }
+      // Fade in over 3 minutes
+      mixer.fadeMasterTo(0.8, 180);
+      const target = 80;
+      let current = 0;
+      const wakeTimer = setInterval(() => {
+        current = Math.min(target, current + (target / 180));
+        masterInput.value = Math.round(current);
+        masterInput.style.setProperty('--pct', Math.round(current) + '%');
+        if (current >= target) clearInterval(wakeTimer);
+      }, 1000);
+    }
+  }, 10000); // check every 10s
+}
+
+// ── NIGHT MODE ─────────────────────────────────────────────────
+document.getElementById('btn-night').addEventListener('click', () => {
+  nightMode = !nightMode;
+  document.body.classList.toggle('night-mode', nightMode);
+  document.getElementById('btn-night').classList.toggle('active', nightMode);
+  showToast(nightMode ? '🌙 Mode nuit activé' : '☀ Mode normal');
+});
+
+// ── LIGHT HALO ─────────────────────────────────────────────────
+document.getElementById('btn-light').addEventListener('click', () => {
+  lightMode = !lightMode;
+  document.getElementById('light-halo').classList.toggle('active', lightMode);
+  document.getElementById('btn-light').classList.toggle('active', lightMode);
+  showToast(lightMode ? '💡 Lumière ambiante activée' : '💡 Lumière désactivée');
+});
+
+function updateLightColor(hex) {
+  if (!lightMode) return;
+  // halo is drawn on canvas, just update color var
+  lightColor = hex;
+}
+function updateLightFromActive() {
+  const activeCards = document.querySelectorAll('.sound-card.active');
+  if (activeCards.length > 0) {
+    updateLightColor(activeCards[0].dataset.color);
+  }
+}
+let lightColor = '#7eb8f7';
+
+// ── AMBIENT CANVAS ─────────────────────────────────────────────
+function initAmbientCanvas() {
+  const canvas = document.getElementById('bg-canvas');
+  const halo = document.getElementById('light-halo');
+  let raf;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    halo.width = window.innerWidth;
+    halo.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Floating orbs
+  const orbs = Array.from({length: 5}, (_, i) => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: 80 + Math.random() * 160,
+    vx: (Math.random() - 0.5) * 0.15,
+    vy: (Math.random() - 0.5) * 0.15,
+    hue: 200 + Math.random() * 60,
+    alpha: 0.03 + Math.random() * 0.04,
+  }));
+
+  function draw(ts) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const o of orbs) {
+      o.x += o.vx; o.y += o.vy;
+      if (o.x < -o.r) o.x = canvas.width + o.r;
+      if (o.x > canvas.width + o.r) o.x = -o.r;
+      if (o.y < -o.r) o.y = canvas.height + o.r;
+      if (o.y > canvas.height + o.r) o.y = -o.r;
+      const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+      g.addColorStop(0, `hsla(${o.hue},80%,65%,${o.alpha})`);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Light halo
+    const hctx = halo.getContext('2d');
+    hctx.clearRect(0, 0, halo.width, halo.height);
+    if (halo.classList.contains('active')) {
+      const cx = halo.width / 2, cy = halo.height * 0.3;
+      const pulse = 0.5 + 0.5 * Math.sin(ts * 0.001);
+      const r = 200 + pulse * 60;
+      const hg = hctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      const hex = lightColor || '#7eb8f7';
+      hg.addColorStop(0, hex + '22');
+      hg.addColorStop(0.5, hex + '08');
+      hg.addColorStop(1, 'transparent');
+      hctx.fillStyle = hg;
+      hctx.fillRect(0, 0, halo.width, halo.height);
+    }
+
+    raf = requestAnimationFrame(draw);
+  }
+  draw(0);
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  if (id === 'presets') renderPresets();
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchPage(btn.dataset.page));
+});
+
+// ── INIT ───────────────────────────────────────────────────────
+buildSoundCards();
+initAmbientCanvas();
+renderPresets();
+
+// NOTE: Web Audio API requires user gesture before audio can start.
+// The first tap on any sound card will initialize the AudioContext.
+// This is a browser security restriction on all mobile platforms.
+</script>
+</body>
+</html>
