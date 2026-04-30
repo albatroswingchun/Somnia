@@ -2,17 +2,17 @@
   "version": 1,
   "updatedAt": "2026-04-30",
   "tracks": [
-    {"id":"rain","file":"assets/audio/rain.m4a"},
-    {"id":"thunder","file":"assets/audio/thunder.m4a"},
+    {"id":"RAIN","file":"assets/audio/RAIN.m4a"},
+    {"id":"THUNDER","file":"assets/audio/THUNDER.m4a"},
     {"id":"wind","file":"assets/audio/wind.m4a"},
     {"id":"forest","file":"assets/audio/forest.m4a"},
-    {"id":"birds","file":"assets/audio/birds.m4a"},
-    {"id":"river","file":"assets/audio/river.m4a"},
-    {"id":"fire","file":"assets/audio/fire.m4a"},
+    {"id":"BIRDS","file":"assets/audio/BIRDS.m4a"},
+    {"id":"RIVER","file":"assets/audio/RIVER.m4a"},
+    {"id":"FIREPLACE","file":"assets/audio/FIREPLACE.m4a"},
     {"id":"white","file":"assets/audio/white.m4a"},
     {"id":"taps","file":"assets/audio/taps.m4a"},
     {"id":"bowl","file":"assets/audio/bowl.m4a"},
     {"id":"breath","file":"assets/audio/breath.m4a"},
-    {"id":"texture","file":"assets/audio/texture.m4a"}
+    {"id":"ASMR_PURE_HAND","file":"assets/audio/ASMR_PURE_HAND.m4a"}
   ]
 }
