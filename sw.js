@@ -1,83 +1,158 @@
-// ── SOMNIA Service Worker ──────────────────────────────────────
-// Stratégie : Cache First pour les assets statiques
-// Les sons générés par Web Audio API ne nécessitent pas de mise en cache audio.
+// ═══════════════════════════════════════════════════════════════
+// SOMNIA v2 — Service Worker
+// Stratégie : Cache-First pour assets statiques et fichiers audio
+// ═══════════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'somnia-v1.0.0';
+const CACHE_STATIC = 'somnia-static-v2.1';
+const CACHE_AUDIO  = 'somnia-audio-v2.1';
 
-// Assets à mettre en cache au premier chargement
+// Assets statiques mis en cache à l'installation
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  // Fonts Google (mises en cache automatiquement par le browser)
 ];
 
-// ── INSTALL ────────────────────────────────────────────────────
-self.addEventListener('install', (event) => {
-  console.log('[SW] Install');
+// Extensions audio reconnues
+const AUDIO_EXTS = ['.m4a', '.mp3', '.wav', '.ogg', '.aac', '.flac'];
+
+// ─── INSTALL ────────────────────────────────────────────────────
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_STATIC)
+      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
   );
-  // Prend le contrôle immédiatement
-  self.skipWaiting();
 });
 
-// ── ACTIVATE ───────────────────────────────────────────────────
-self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate');
+// ─── ACTIVATE ───────────────────────────────────────────────────
+self.addEventListener('activate', event => {
+  const validCaches = [CACHE_STATIC, CACHE_AUDIO];
   event.waitUntil(
-    // Supprime les anciens caches
-    caches.keys().then((keys) =>
-      Promise.all(
+    caches.keys()
+      .then(keys => Promise.all(
         keys
-          .filter((k) => k !== CACHE_NAME)
-          .map((k) => caches.delete(k))
-      )
-    )
+          .filter(k => !validCaches.includes(k))
+          .map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// ── FETCH ──────────────────────────────────────────────────────
-self.addEventListener('fetch', (event) => {
-  // Ignore les requêtes non-GET
+// ─── FETCH ──────────────────────────────────────────────────────
+self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
-  // Ignore les requêtes cross-origin (Google Fonts, etc.) — laisser le navigateur gérer
   const url = new URL(event.request.url);
-  if (url.origin !== location.origin && !url.hostname.includes('fonts.googleapis.com') && !url.hostname.includes('fonts.gstatic.com')) {
+  const ext = url.pathname.substring(url.pathname.lastIndexOf('.')).toLowerCase();
+
+  // ── Fichiers audio : Cache-First, mise en cache au premier chargement
+  if (AUDIO_EXTS.includes(ext) || url.pathname.includes('/assets/audio/')) {
+    event.respondWith(audioStrategy(event.request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  // ── Assets statiques (HTML, CSS, JS, manifests) : Cache-First
+  if (url.origin === self.location.origin) {
+    event.respondWith(staticStrategy(event.request));
+    return;
+  }
 
-      return fetch(event.request).then((response) => {
-        // Ne met en cache que les réponses valides
-        if (!response || response.status !== 200 || response.type === 'opaque') {
-          return response;
-        }
-        const cloned = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, cloned);
-        });
-        return response;
-      }).catch(() => {
-        // Fallback offline : retourner la page principale
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-      });
-    })
-  );
+  // ── Fonts Google : Stale-While-Revalidate
+  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
+    event.respondWith(fontStrategy(event.request));
+    return;
+  }
+
+  // Tout le reste : réseau direct
 });
 
-// ── MESSAGE ────────────────────────────────────────────────────
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+// ─── STRATÉGIE AUDIO : Cache-First avec fallback réseau ─────────
+async function audioStrategy(request) {
+  const cache = await caches.open(CACHE_AUDIO);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      // Cloner avant de mettre en cache (le body ne peut être lu qu'une fois)
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    // Fichier audio absent : retourner une réponse vide (le JS gérera le fallback générateur)
+    return new Response('', {
+      status: 404,
+      statusText: 'Audio file not found — using generator fallback',
+    });
+  }
+}
+
+// ─── STRATÉGIE STATIQUE : Cache-First, revalidation en arrière-plan
+async function staticStrategy(request) {
+  const cache  = await caches.open(CACHE_STATIC);
+  const cached = await cache.match(request);
+
+  if (cached) {
+    // Revalidation silencieuse
+    fetch(request)
+      .then(response => {
+        if (response && response.status === 200) cache.put(request, response);
+      })
+      .catch(() => {});
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    // Offline : retourner index.html pour les navigations document
+    if (request.destination === 'document') {
+      return cache.match('./index.html');
+    }
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+// ─── STRATÉGIE FONTS : Stale-While-Revalidate ───────────────────
+async function fontStrategy(request) {
+  const cache  = await caches.open(CACHE_STATIC);
+  const cached = await cache.match(request);
+
+  if (cached) {
+    fetch(request)
+      .then(r => { if (r && r.status === 200) cache.put(request, r); })
+      .catch(() => {});
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) cache.put(request, response.clone());
+    return response;
+  } catch {
+    return new Response('', { status: 503 });
+  }
+}
+
+// ─── MESSAGE : Forcer mise à jour ───────────────────────────────
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+
+  // Précache des fichiers audio à la demande
+  if (event.data && event.data.type === 'PRECACHE_AUDIO') {
+    const files = event.data.files || [];
+    caches.open(CACHE_AUDIO).then(cache => {
+      files.forEach(f => {
+        fetch(f).then(r => {
+          if (r && r.status === 200) cache.put(f, r);
+        }).catch(() => {});
+      });
+    });
   }
 });
