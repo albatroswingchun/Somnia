@@ -609,16 +609,6 @@ html, body {
 .entry-title { font-size: 26px !important; }
 .entry-desc  { font-size: 15px; color: var(--text); line-height: 1.6; margin-bottom: 14px; }
 .entry-enter-btn { width: 100%; max-width: 320px; margin: 0 auto; display: block; }
-.splash-overlay {
-  position: fixed; inset: 0; z-index: 260; background: #000;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
-}
-.splash-overlay.visible { opacity: 1; pointer-events: auto; }
-.splash-title {
-  font-family: 'Quicksand', var(--sans);
-  font-size: 42px; letter-spacing: 0.08em; color: #e8edf5;
-}
 
 .modal-input {
   width: 100%;
@@ -792,10 +782,6 @@ html, body {
   </div>
 </div>
 
-<div class="splash-overlay" id="entry-splash">
-  <div class="splash-title">Somnia</div>
-</div>
-
 <!-- Save modal -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -891,8 +877,8 @@ html, body {
         <div class="ctrl-row">
           <span class="ctrl-label">Vitesse</span>
           <input type="range" class="ctrl-slider" id="vasmr-speed"
-                 min="1" max="10" value="4" step="1"/>
-          <span class="ctrl-val" id="vasmr-speed-val">4</span>
+                 min="1" max="10" value="6" step="1"/>
+          <span class="ctrl-val" id="vasmr-speed-val">6</span>
         </div>
         <div class="ctrl-row">
           <span class="ctrl-label">Mode</span>
@@ -1313,7 +1299,7 @@ class VisualASMR {
     this.running = false;
     this.raf     = null;
     this.mode    = 'linear';   // 'linear' | 'free'
-    this.speed   = 4;          // 1–10
+    this.speed   = 6;          // 1–10
     this.clickOn = true;
 
     // Position & vélocité
@@ -1362,7 +1348,7 @@ class VisualASMR {
     const dt   = Math.min((ts - this._lastTs) / 1000, 0.05); // secondes, max 50ms
     this._lastTs = ts;
 
-    const speedFactor = (this.speed / 10) * 0.55 + 0.04; // plage 0.04–0.59
+    const speedFactor = (this.speed / 10) * 1.05 + 0.12; // plage 0.225–1.17
 
     if (this.mode === 'linear') {
       this._updateLinear(dt, speedFactor);
@@ -1385,22 +1371,14 @@ class VisualASMR {
       this.vx = 1;
       this._maybeClick();
     }
-    // Y fixé au centre en mode linéaire, légère oscillation
-    this.phase += dt * 0.8;
-    this.y = 0.5 + 0.04 * Math.sin(this.phase);
+    // Y fixé strictement au centre en mode linéaire
+    this.y = 0.5;
   }
 
   _updateFree(dt, sf) {
     this.x += this.vx * sf * dt;
     this.y += this.vy * sf * dt;
-    // Friction légère pour mouvement organique
-    this.vx += (Math.random() - 0.5) * 0.15;
-    this.vy += (Math.random() - 0.5) * 0.15;
-    // Normaliser la vitesse
-    const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
-    if (speed > 1.4) { this.vx /= speed / 1.4; this.vy /= speed / 1.4; }
-    if (speed < 0.5) { this.vx *= 1.1; this.vy *= 1.1; }
-    // Bounce
+    // Bounce linéaire (trajectoires droites)
     if (this.x >= 1) { this.x = 1; this.vx *= -1; this._maybeClick(); }
     if (this.x <= 0) { this.x = 0; this.vx *= -1; this._maybeClick(); }
     if (this.y >= 1) { this.y = 1; this.vy *= -1; }
@@ -1782,9 +1760,6 @@ document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
   startTimer(parseInt(chip.dataset.min, 10), chip);
   document.getElementById('entry-timer-modal-overlay').classList.remove('open');
   document.getElementById('profile-modal-overlay').classList.remove('open');
-  const splash = document.getElementById('entry-splash');
-  splash.classList.add('visible');
-  setTimeout(() => splash.classList.remove('visible'), 2000);
 });
 
 function updateTimerDisplay() {
@@ -1956,7 +1931,7 @@ vasmrSpeedSlider.addEventListener('input', (e) => {
   vasmrSpeedSlider.style.setProperty('--pct', (v / 10 * 100) + '%');
   if (vasmr) vasmr.setSpeed(v);
 });
-vasmrSpeedSlider.style.setProperty('--pct', '40%');
+vasmrSpeedSlider.style.setProperty('--pct', '60%');
 
 vasmrClickToggle.addEventListener('click', () => {
   vasmrClickOn = !vasmrClickOn;
