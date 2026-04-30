@@ -790,10 +790,10 @@ html, body {
   <div class="modal" style="position:relative">
     <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
     <h3>Choisir un profil</h3>
-    <p class="intro-text">Somnia vous accompagne vers le sommeil avec des sons doux, calibrés selon votre rythme.</p>
+    <p class="intro-text">Crée ton ambiance sonore sur mesure et laisse-toi glisser naturellement vers le sommeil. Une expérience ASMR immersive pensée pour apaiser ton esprit.</p>
     <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
     <input class="modal-input" id="profile-name-input" type="text" placeholder="Nouveau profil…" maxlength="40"/>
-    <button class="btn-primary" id="profile-create-btn">Créer et charger</button>
+    <button class="btn-primary" id="profile-create-btn">Entrer</button>
     <div class="section-sep" style="padding:14px 0 6px;">
       <span class="section-sep-label">Minuteur rapide</span><div class="section-sep-line"></div>
     </div>
@@ -801,6 +801,7 @@ html, body {
       <button class="chip" data-min="15">15 min</button>
       <button class="chip" data-min="30">30 min</button>
       <button class="chip" data-min="45">45 min</button>
+      <button class="chip" data-min="60">1 h</button>
     </div>
   </div>
 </div>
@@ -918,6 +919,10 @@ html, body {
         <button class="ghost-btn" id="vasmr-open-btn"
                 style="width:100%; margin-top:4px; font-size:10px;">
           ▶ Ouvrir en plein écran
+        </button>
+        <button class="ghost-btn" id="vasmr-back-btn"
+                style="width:100%; margin-top:2px; font-size:10px;">
+          ← Retour
         </button>
       </div>
     </div>
@@ -1497,6 +1502,7 @@ SOUNDS.forEach(s => volumes[s.id] = 0);
 let dimOn     = false;
 let vasmrOn   = false;
 let currentProfileId = null;
+let pendingProfileId = null;
 
 // Timer
 let timerInterval = null;
@@ -1858,10 +1864,10 @@ function renderProfilePicker() {
     const item = document.createElement('div');
     item.className = 'preset-item';
     item.innerHTML = `<span style="font-size:18px">👤</span><span class="preset-name">${profile.name}</span>`;
-    item.addEventListener('click', async () => {
-      await loadProfileState(profile.id);
-      document.getElementById('profile-modal-overlay').classList.remove('open');
-      toast(`👤 "${profile.name}" chargé`);
+    item.addEventListener('click', () => {
+      pendingProfileId = profile.id;
+      document.querySelectorAll('#profile-list .preset-item').forEach(el => el.style.borderColor = 'var(--border)');
+      item.style.borderColor = 'var(--accent)';
     });
     list.appendChild(item);
   });
@@ -1876,15 +1882,24 @@ document.getElementById('profile-skip-btn').addEventListener('click', () => {
 
 document.getElementById('profile-create-btn').addEventListener('click', () => {
   const name = document.getElementById('profile-name-input').value.trim();
-  if (!name) return;
-  const profiles = loadProfiles();
-  const id = `p_${Date.now()}`;
-  profiles.push({ id, name, volumes: {}, updatedAt: Date.now() });
-  saveProfiles(profiles);
-  currentProfileId = id;
+  if (name) {
+    const profiles = loadProfiles();
+    const id = `p_${Date.now()}`;
+    profiles.push({ id, name, volumes: {}, updatedAt: Date.now() });
+    saveProfiles(profiles);
+    currentProfileId = id;
+    pendingProfileId = id;
+    toast(`👤 "${name}" créé`);
+  } else if (pendingProfileId) {
+    loadProfileState(pendingProfileId);
+    toast('👤 Profil chargé');
+  } else {
+    currentProfileId = null;
+    resetAllTracks();
+    toast('Bienvenue dans Somnia');
+  }
   document.getElementById('profile-name-input').value = '';
   document.getElementById('profile-modal-overlay').classList.remove('open');
-  toast(`👤 "${name}" créé`);
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {
@@ -1929,6 +1944,7 @@ const vasmrSpeedSlider  = document.getElementById('vasmr-speed');
 const vasmrSpeedVal     = document.getElementById('vasmr-speed-val');
 const vasmrClickToggle  = document.getElementById('vasmr-click-toggle');
 const vasmrOpenBtn      = document.getElementById('vasmr-open-btn');
+const vasmrBackBtn      = document.getElementById('vasmr-back-btn');
 const vasmrOverlay      = document.getElementById('vasmr-overlay');
 const vasmrCanvas       = document.getElementById('vasmr-canvas');
 const vasmrCloseBtn     = document.getElementById('vasmr-close-btn');
@@ -1990,6 +2006,14 @@ vasmrOpenBtn.addEventListener('click', async () => {
 });
 
 vasmrCloseBtn.addEventListener('click', () => {
+  vasmr?.stop();
+  vasmrOverlay.classList.remove('visible');
+});
+
+vasmrBackBtn.addEventListener('click', () => {
+  vasmrOn = false;
+  vasmrToggle.classList.remove('on');
+  vasmrControls.classList.remove('visible');
   vasmr?.stop();
   vasmrOverlay.classList.remove('visible');
 });
