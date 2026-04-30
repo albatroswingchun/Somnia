@@ -1,201 +1,46 @@
-# 🌙 Somnia — Ambiance Sonore ASMR & Réveil Progressif
+# 🌙 Somnia v2 — Table de mixage ASMR
 
-> Une PWA mobile-first pour composer votre environnement sonore idéal au coucher et au réveil.
+> PWA mobile-first pour composer votre ambiance sonore idéale.
+> Interface minimaliste type table de mixage. Visual ASMR intégré.
 
 ---
 
-## ✨ Fonctionnalités
+## Nouveautés v2
 
-| Fonctionnalité | Détail |
+| Avant (v1) | Après (v2) |
 |---|---|
-| **12 sons ASMR** | Pluie, orage, vent, forêt, oiseaux, rivière, feu, bruit blanc, taps, bols tibétains, respiration, texture |
-| **Mixage en temps réel** | Knob circulaire par son, volume indépendant |
-| **Volume maître** | Slider global |
-| **Ambiance aléatoire** | Lance 2–4 sons au hasard |
-| **Presets sauvegardés** | localStorage, chargement en un tap |
-| **Minuteur d'endormissement** | 15/30/45/60 min avec fade-out progressif |
-| **Réveil progressif** | Heure programmable, montée douce du volume sur 3 min |
-| **Mode nuit** | Interface ultra-sombre, animations ralenties |
-| **Lumière ambiante** | Halo animé synchronisé avec le son actif |
-| **PWA installable** | Fonctionne hors ligne après la première visite |
+| Cartes/grille | **Liste verticale** (table de mixage) |
+| Volume 0–100 | **Volume 0–10** discret |
+| Bouton ON/OFF séparé | **Volume = commutateur** (0 = off, ≥1 = on) |
+| Réveil programmable | **Supprimé** |
+| Augmenter/réduire luminosité | **Toggle dim seul** |
+| Pas de visuel | **Visual ASMR (EMDR)** |
+| Sons générés uniquement | **Vos fichiers audio + fallback générateur** |
 
 ---
 
-## 🚀 Installation et lancement
-
-### Prérequis
-- Un navigateur moderne (Chrome, Safari, Firefox)
-- Optionnel : un serveur local pour le service worker
-
-### Lancer en local
-
-```bash
-# Cloner le projet
-git clone https://github.com/TON-USERNAME/somnia-asmr-alarm.git
-cd somnia-asmr-alarm
-
-# Option 1 : Python (intégré sur macOS/Linux)
-python3 -m http.server 8080
-
-# Option 2 : Node.js
-npx serve .
-
-# Option 3 : VS Code Live Server
-# Installez l'extension "Live Server" et cliquez sur "Go Live"
-
-# Ouvrir dans le navigateur
-# → http://localhost:8080
-```
-
-> ⚠️ **Important** : Le Service Worker ne fonctionne qu'en HTTPS ou sur `localhost`. Pour un test complet hors-ligne, utilisez l'option GitHub Pages (voir ci-dessous) ou un outil comme [`mkcert`](https://github.com/FiloSottile/mkcert) pour HTTPS local.
-
----
-
-## 🎵 Ajouter ou remplacer les sons
-
-### Sons générés automatiquement (par défaut)
-L'application génère tous les sons en temps réel via **Web Audio API** — aucun fichier audio requis.
-
-### Utiliser vos propres sons (meilleure qualité)
-
-Les sons doivent être placés dans `/assets/audio/` avec ces noms exacts :
+## Structure du projet
 
 ```
-assets/
-└── audio/
-    ├── rain.wav      (ou .mp3, .ogg)
-    ├── thunder.wav
-    ├── wind.wav
-    ├── forest.wav
-    ├── birds.wav
-    ├── river.wav
-    ├── fire.wav
-    ├── white.wav
-    ├── taps.wav
-    ├── bowl.wav
-    ├── breath.wav
-    └── texture.wav
-```
-
-Dans `index.html`, modifiez la définition des sons (tableau `SOUNDS`) pour pointer vers les fichiers :
-
-```js
-{ id:'rain', name:'Pluie douce', icon:'🌧', color:'#7eb8f7', file:'assets/audio/rain.mp3' }
-```
-
-Et dans la classe `AudioMixer`, méthode `loadTrack`, activez le chargement depuis fichier :
-
-```js
-async loadTrack(sound) {
-  if (this.tracks[sound.id]) return;
-  const response = await fetch(sound.file);
-  const arrayBuffer = await response.arrayBuffer();
-  const buf = await this.ctx.decodeAudioData(arrayBuffer);
-  // ... suite identique
-}
-```
-
-### Générer les sons basiques (Python)
-
-```bash
-pip install numpy scipy
-python generate_sounds.py
-```
-
----
-
-## 🎧 Sources de sons libres de droits
-
-> **Vérifiez toujours les licences** avant utilisation, même pour un projet personnel.
-
-| Source | URL | Licence typique |
-|---|---|---|
-| **Freesound** | https://freesound.org | CC0 / CC-BY |
-| **Pixabay Sound Effects** | https://pixabay.com/sound-effects | Pixabay License (libre) |
-| **Zapsplat** | https://www.zapsplat.com | Standard (attribution requise) |
-| **BBC Sound Effects** | https://sound-effects.bbcrewind.co.uk | RemArc (usage perso/éduc) |
-| **YouTube Audio Library** | https://studio.youtube.com | YouTube License |
-| **Incompetech** | https://incompetech.com | CC-BY |
-
----
-
-## 🌐 Déploiement sur GitHub Pages
-
-```bash
-# 1. Créer un dépôt GitHub
-# 2. Pousser le code
-git init
-git add .
-git commit -m "feat: initial Somnia release"
-git remote add origin https://github.com/TON-USERNAME/somnia-asmr-alarm.git
-git push -u origin main
-
-# 3. Activer GitHub Pages
-# Settings → Pages → Source : "Deploy from a branch" → main / root
-# URL : https://TON-USERNAME.github.io/somnia-asmr-alarm/
-```
-
----
-
-## 📱 Convertir en application mobile avec Capacitor
-
-```bash
-# 1. Initialiser npm (si pas encore fait)
-npm init -y
-
-# 2. Installer Capacitor
-npm install @capacitor/core @capacitor/cli
-npm install @capacitor/android @capacitor/ios
-
-# 3. Initialiser Capacitor
-npx cap init "Somnia" "com.somnia.app" --web-dir "."
-
-# 4. Ajouter les plateformes
-npx cap add android
-npx cap add ios
-
-# 5. Synchroniser le code
-npx cap sync
-
-# 6. Ouvrir dans les IDEs natifs
-npx cap open android   # Android Studio requis
-npx cap open ios       # Xcode requis (macOS seulement)
-```
-
-> **Note Android** : Ajoutez dans `AndroidManifest.xml` :
-> ```xml
-> <uses-permission android:name="android.permission.WAKE_LOCK" />
-> <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-> ```
-
----
-
-## 🔊 Limites du Web Audio API sur mobile
-
-### Restriction fondamentale : user gesture
-> Les navigateurs mobiles **refusent de jouer du son** jusqu'à ce que l'utilisateur interagisse avec la page (tap, clic). C'est une sécurité anti-autoplay imposée par Apple et Google.
-
-**Somnia gère cette contrainte** : l'`AudioContext` s'initialise au premier tap sur un son.
-
-### Autres limites à connaître
-- **iOS Safari** : le contexte audio peut se suspendre quand l'app passe en arrière-plan. Solution : `audioContext.resume()` à chaque retour au premier plan.
-- **Android Chrome** : généralement plus permissif, mais certains appareils limitent la lecture en arrière-plan.
-- **Batterie** : générer des sons en temps réel consomme du CPU. Utilisez des fichiers audio pré-générés pour réduire la consommation.
-- **Multitâche** : sur iOS, la lecture audio s'arrête si l'onglet est inactif trop longtemps. Envisagez Capacitor pour contourner cette limite en app native.
-
----
-
-## 🛠 Structure du projet
-
-```
-somnia-asmr-alarm/
-├── index.html          ← Application principale (single-file)
-├── manifest.json       ← PWA manifest
-├── sw.js               ← Service Worker (cache offline)
-├── generate_sounds.py  ← Générateur de sons Python
-├── README.md           ← Ce fichier
+somnia/
+├── index.html              ← Application complète (single-file)
+├── sw.js                   ← Service Worker (cache audio + offline)
+├── manifest.json           ← PWA installable
+├── README.md
 └── assets/
-    ├── audio/          ← Sons (optionnel, générés par Web Audio par défaut)
+    ├── audio/              ← 📂 PLACEZ VOS SONS ICI
+    │   ├── rain.m4a
+    │   ├── thunder.m4a
+    │   ├── wind.m4a
+    │   ├── forest.m4a
+    │   ├── birds.m4a
+    │   ├── river.m4a
+    │   ├── fire.m4a
+    │   ├── white.m4a
+    │   ├── taps.m4a
+    │   ├── bowl.m4a
+    │   ├── breath.m4a
+    │   └── texture.m4a
     └── icons/
         ├── icon-192.png
         └── icon-512.png
@@ -203,43 +48,259 @@ somnia-asmr-alarm/
 
 ---
 
-## 🎨 Personnalisation
+## Intégration de vos fichiers audio
 
-### Changer les couleurs
-Modifiez les variables CSS dans `:root` :
-```css
---accent:  #7eb8f7;   /* bleu par défaut */
---accent2: #a78bfa;   /* violet */
---warm:    #f4b97e;   /* réveil chaud */
+### Principe de fonctionnement
+
+Somnia utilise un **système à double fallback** :
+
+1. **Priorité 1** : fichier audio dans `assets/audio/` (votre son)
+2. **Priorité 2** : générateur Web Audio procédural (automatique si le fichier manque)
+
+Vous pouvez donc déployer l'application **sans aucun fichier audio** — elle fonctionnera avec les sons générés. Ajoutez vos fichiers progressivement.
+
+### Formats supportés
+
+| Format | Extension | Recommandation |
+|---|---|---|
+| **AAC / M4A** | `.m4a` | ✅ **Recommandé** — meilleur rapport qualité/poids |
+| MP3 | `.mp3` | ✅ Compatible partout |
+| WAV | `.wav` | ⚠ Fichiers très lourds — évitez pour le web |
+| OGG Vorbis | `.ogg` | ✅ Excellent, mais pas supporté sur Safari/iOS |
+
+**Recommandation** : utilisez `.m4a` (AAC) à 128 kbps. C'est le format qui offre la meilleure qualité pour le plus petit poids, compatible avec tous les navigateurs modernes incluant Safari/iOS.
+
+### Nommage des fichiers
+
+Les fichiers doivent porter exactement ces noms (définis dans `SOUNDS` dans `index.html`) :
+
+| Fichier | Son |
+|---|---|
+| `rain.m4a` | Pluie douce |
+| `thunder.m4a` | Orage lointain |
+| `wind.m4a` | Vent |
+| `forest.m4a` | Forêt |
+| `birds.m4a` | Oiseaux |
+| `river.m4a` | Rivière |
+| `fire.m4a` | Feu de cheminée |
+| `white.m4a` | Bruit blanc |
+| `taps.m4a` | Taps ASMR |
+| `bowl.m4a` | Bols tibétains |
+| `breath.m4a` | Respiration |
+| `texture.m4a` | Texture |
+
+### Optimisation audio
+
+**Durée idéale** : 30–60 secondes  
+La boucle doit être transparente. Préparez vos sons pour que le début et la fin se rejoignent naturellement (crossfade ou coupe propre sur une zone calme).
+
+**Poids cible** : < 1–2 MB par fichier  
+À 128 kbps AAC : 1 minute ≈ 960 KB. Idéal.
+
+**Conversion avec ffmpeg** (gratuit) :
+```bash
+# Depuis n'importe quel format → M4A 128kbps mono (recommandé pour ASMR)
+ffmpeg -i input.wav -c:a aac -b:a 128k -ac 1 output.m4a
+
+# Stéréo si le son a un vrai intérêt spatial
+ffmpeg -i input.wav -c:a aac -b:a 128k -ac 2 output.m4a
+
+# Rogner à 45 secondes pour une boucle propre
+ffmpeg -i input.wav -t 45 -c:a aac -b:a 128k output.m4a
+
+# Normaliser le volume (utile pour homogénéiser les sources)
+ffmpeg -i input.wav -af loudnorm=I=-16:TP=-1.5:LRA=11 -c:a aac -b:a 128k output.m4a
 ```
 
-### Ajouter un son
-1. Dans le tableau `SOUNDS` de `index.html`, ajoutez :
+**Sources de sons libres de droits** :
+- [freesound.org](https://freesound.org) — CC0 / CC-BY
+- [pixabay.com/sound-effects](https://pixabay.com/sound-effects) — Pixabay License
+- [mixkit.co/free-sound-effects](https://mixkit.co/free-sound-effects) — Mixkit License
+
+### Ajouter un son personnalisé
+
+1. Ajoutez votre fichier dans `assets/audio/monsound.m4a`
+2. Dans `index.html`, dans le tableau `SOUNDS`, ajoutez :
 ```js
-{ id:'mySound', name:'Mon son', icon:'🎸', color:'#ff6b6b', generate:'white' }
+{ id:'monsound', name:'Mon son', icon:'🎸', color:'#ff6b6b',
+  file:'assets/audio/monsound.m4a', gen:'white' }
 ```
-2. Optionnellement, créez un générateur `'mySound'` dans `generateBuffer()`.
+Le champ `gen` indique quel générateur utiliser si le fichier est absent (`'white'`, `'rain'`, `'wind'`…).
 
 ---
 
-## 🚧 Améliorations possibles
+## Fonctionnement offline
 
-- [ ] Transitions entre sons (crossfade)
-- [ ] EQ par piste (grave/aigu)
-- [ ] Oscilloscope/visualiseur temps réel
-- [ ] Notifications natives (Capacitor) pour le réveil
-- [ ] Synchronisation Bluetooth (deux appareils)
-- [ ] Intégration avec Fitbit / Apple Health pour phases de sommeil
-- [ ] Mode méditation (minuteur + respiration guidée)
-- [ ] Export du mix (fichier audio)
-- [ ] Thèmes visuels (Aurora, Désert, Océan...)
+### Comment Somnia fonctionne sans connexion
+
+1. **Premier chargement** (avec connexion) :
+   - L'application se charge normalement
+   - Le Service Worker s'installe et met en cache `index.html`, `manifest.json`
+   - Les fichiers audio sont mis en cache lors du **premier accès** à chaque son
+
+2. **Chargements suivants** (avec ou sans connexion) :
+   - Le Service Worker sert les fichiers depuis le cache (Cache-First)
+   - Les sons déjà joués une fois sont disponibles hors ligne
+   - Les sons jamais joués → fallback générateur Web Audio
+
+3. **Sons générés (fallback)** :
+   - Entièrement dans le navigateur, aucune connexion requise
+   - Disponibles instantanément à chaque session
+
+### Rendre tous les sons disponibles offline dès le premier chargement
+
+Option 1 — Inclure les fichiers dans le repo GitHub :
+```
+Déposez vos sons dans assets/audio/ et committez-les dans le repo.
+Lors du déploiement GitHub Pages, les sons font partie du bundle.
+À la première visite, le SW les précharge en arrière-plan.
+```
+
+Option 2 — Précache explicite (à ajouter dans `index.html`) :
+```js
+// Après l'enregistrement du SW, demander le précache des sons
+if (navigator.serviceWorker.controller) {
+  navigator.serviceWorker.controller.postMessage({
+    type: 'PRECACHE_AUDIO',
+    files: [
+      'assets/audio/rain.m4a',
+      'assets/audio/wind.m4a',
+      // etc.
+    ]
+  });
+}
+```
+
+### Taille totale estimée du cache
+
+| Composant | Taille estimée |
+|---|---|
+| `index.html` | ~100 KB |
+| `manifest.json` | ~1 KB |
+| Fonts Google (DM Mono + Syne) | ~200 KB |
+| 12 sons × 1 MB | ~12 MB |
+| **Total** | **~12.3 MB** |
+
+Tout tient dans un cache PWA standard (limite : généralement 50–200 MB selon le navigateur).
 
 ---
 
-## 📄 Licence
+## Installation et lancement
+
+```bash
+# Cloner le projet
+git clone https://github.com/TON-USERNAME/somnia.git
+cd somnia
+
+# Serveur local Python (intégré)
+python3 -m http.server 8080
+
+# Ou Node.js
+npx serve .
+
+# Ou VS Code Live Server
+# → Installer l'extension "Live Server" → clic droit index.html → Open with Live Server
+
+# Ouvrir : http://localhost:8080
+```
+
+> ⚠️ Le Service Worker ne fonctionne qu'en HTTPS ou `localhost`.
+
+---
+
+## Déploiement GitHub Pages
+
+```bash
+git init
+git add .
+git commit -m "feat: Somnia v2"
+git remote add origin https://github.com/TON-USERNAME/somnia.git
+git push -u origin main
+
+# Settings → Pages → Source : main / root
+# URL : https://TON-USERNAME.github.io/somnia/
+```
+
+---
+
+## Fonctionnalités
+
+### Table de mixage
+
+Chaque son est une ligne horizontale avec :
+- **Icône** + **nom** du son
+- **Slider 0–10** : volume discret
+- **Volume 0** = son éteint (fade out automatique)
+- **Volume ≥ 1** = son allumé (fade in automatique)
+- Indicateur d'activité (barre colorée gauche + vague animée)
+
+### Visual ASMR
+
+Point lumineux animé pour focus visuel / EMDR doux.
+
+**Mode latéral** : mouvement gauche ↔ droite continu  
+**Mode libre** : trajectoire organique pseudo-aléatoire avec rebonds  
+**Vitesse** : 1 (très lent) → 10 (rapide)  
+**Son clic** : petit clic synthétique à chaque rebond (désactivable)
+
+### Minuteur d'endormissement
+
+4 durées : 15 / 30 / 45 / 60 minutes  
+Fade out progressif sur les **45 dernières secondes**  
+Barre de progression visuelle
+
+### Presets
+
+Sauvegarde l'état complet : volumes de chaque piste + volume maître  
+Stockage localStorage — persistant entre les sessions
+
+### Mode dim
+
+Toggle luminosité réduite — overlay sombre quasi-opaque  
+Tap sur l'overlay pour désactiver
+
+---
+
+## Limites Web Audio sur mobile
+
+### Restriction user-gesture (iOS / Android)
+
+> Les navigateurs mobiles bloquent le son jusqu'à un tap utilisateur.
+
+Somnia gère cela : l'`AudioContext` s'initialise au **premier tap sur un slider ou un bouton**.
+
+### iOS Safari spécifique
+
+- L'audio peut se suspendre quand l'app passe en arrière-plan
+- Solution native → convertir avec Capacitor (voir ci-dessous)
+- En PWA pure : le son continue si l'écran reste actif
+
+### Android Chrome
+
+- Plus permissif qu'iOS pour le son en arrière-plan
+- Certains appareils low-end peuvent avoir des latences sur la génération procédurale → utiliser des fichiers audio pré-générés
+
+---
+
+## Convertir en app native avec Capacitor
+
+```bash
+npm init -y
+npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
+npx cap init "Somnia" "com.somnia.app" --web-dir "."
+npx cap add android
+npx cap add ios
+npx cap sync
+npx cap open android  # Android Studio requis
+npx cap open ios      # Xcode requis (macOS)
+```
+
+---
+
+## Licence
 
 MIT — libre d'utilisation, modification et distribution.
 
 ---
 
-*Somnia — Dormez mieux. Réveillez-vous doucement.*
+*Somnia — Dormez mieux.*
