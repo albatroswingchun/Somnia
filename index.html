@@ -3,1462 +3,1692 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<meta name="theme-color" content="#050810"/>
+<meta name="theme-color" content="#06080f"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="description" content="Somnia — Ambiance sonore ASMR & réveil progressif"/>
+<meta name="description" content="Somnia — Table de mixage ASMR"/>
 <title>Somnia</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Syne:wght@300;400;700&display=swap" rel="stylesheet"/>
 
 <style>
-/* ── RESET & BASE ──────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════
+   SOMNIA v2 — TABLE DE MIXAGE ASMR
+   ═══════════════════════════════════════════════ */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #050810;
-  --bg2:       #090d1a;
-  --surface:   rgba(255,255,255,0.04);
-  --surface2:  rgba(255,255,255,0.07);
-  --border:    rgba(255,255,255,0.06);
-  --text:      #c8cfe0;
-  --text-dim:  #5a6380;
-  --accent:    #7eb8f7;
-  --accent2:   #a78bfa;
-  --glow:      rgba(126,184,247,0.15);
-  --warm:      #f4b97e;
-  --danger:    #f87171;
-  --radius:    16px;
-  --radius-lg: 24px;
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans:  'Inter', system-ui, sans-serif;
-  --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --bg:          #06080f;
+  --bg-lift:     #0b0e1a;
+  --bg-high:     #111520;
+  --border:      rgba(255,255,255,0.055);
+  --border-hi:   rgba(255,255,255,0.12);
+  --text:        #bcc5d8;
+  --text-dim:    #424d65;
+  --text-hi:     #e8edf5;
+  --accent:      #6ba4e8;
+  --accent-glow: rgba(107,164,232,0.18);
+  --dim-mode:    rgba(6,8,15,0.92);
+  --mono:        'DM Mono', 'Courier New', monospace;
+  --sans:        'Syne', system-ui, sans-serif;
+  --row-h:       68px;
+  --ease:        cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-html { height: 100%; background: var(--bg); }
-body {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--text);
-  min-height: 100%;
+html, body {
+  height: 100%;
   background: var(--bg);
-  overflow-x: hidden;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  overflow-x: hidden;
 }
 
-/* ── AMBIENT BACKGROUND ────────────────────────────────────── */
+/* ── AMBIENT CANVAS ─────────────────────────────── */
 #bg-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
 }
 
+/* ── LAYOUT ─────────────────────────────────────── */
 .app {
   position: relative;
   z-index: 1;
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 16px 100px;
+  padding: 0 0 96px;
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── HEADER ─────────────────────────────────────────────────── */
+/* ── HEADER ─────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 48px 0 24px;
+  padding: 44px 20px 20px;
 }
 
-.logo {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 300;
-  letter-spacing: 0.08em;
-  color: #fff;
-  font-style: italic;
+.wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.logo span {
-  display: block;
-  font-size: 10px;
-  font-style: normal;
-  font-family: var(--font-sans);
-  letter-spacing: 0.25em;
+.wordmark-title {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--text-hi);
+  line-height: 1;
+}
+
+.wordmark-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
   color: var(--text-dim);
   text-transform: uppercase;
-  margin-top: 2px;
 }
 
-.header-actions { display: flex; gap: 8px; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-.icon-btn {
-  width: 40px; height: 40px;
-  border-radius: 50%;
+.hdr-btn {
+  width: 38px; height: 38px;
+  border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--bg-lift);
   color: var(--text-dim);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  transition: var(--transition);
-  backdrop-filter: blur(8px);
+  font-size: 16px;
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
 }
-.icon-btn:hover, .icon-btn.active {
-  color: var(--accent);
-  border-color: rgba(126,184,247,0.3);
-  background: rgba(126,184,247,0.08);
-}
+.hdr-btn:hover  { color: var(--text); border-color: var(--border-hi); }
+.hdr-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
 
-/* ── MASTER VOLUME ──────────────────────────────────────────── */
-.master-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 20px;
-  backdrop-filter: blur(16px);
-}
-
+/* ── MASTER ROW ─────────────────────────────────── */
 .master-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  padding: 0 20px 16px;
+  border-bottom: 1px solid var(--border);
 }
 
 .master-label {
-  font-size: 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  min-width: 40px;
+}
+
+.master-vol-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.master-vol-val {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 16px;
+  text-align: right;
+}
+
+/* Master slider */
+.slider-master {
+  flex: 1;
+  height: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--pct, 80%),
+    var(--border-hi) var(--pct, 80%)
+  );
+}
+.slider-master::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--text-hi);
+  box-shadow: 0 0 0 3px var(--bg), 0 0 10px var(--accent-glow);
+  transition: box-shadow 0.2s;
+}
+.slider-master:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--bg), 0 0 18px rgba(107,164,232,0.5);
+}
+
+.master-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ghost-btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.ghost-btn:hover { color: var(--text); border-color: var(--border-hi); }
+.ghost-btn.danger:hover { color: #f87171; border-color: rgba(248,113,113,0.4); }
+
+/* ── TRACK LIST ─────────────────────────────────── */
+.track-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+/* ── TRACK ROW ──────────────────────────────────── */
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: var(--row-h);
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  transition: background 0.3s;
+}
+
+/* Active track gets a subtle left bar */
+.track-row::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 16px; bottom: 16px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--track-color, var(--accent));
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.track-row.active::before { opacity: 1; }
+.track-row.active { background: rgba(255,255,255,0.018); }
+
+/* icon */
+.track-icon {
+  font-size: 20px;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: transform 0.3s var(--ease);
+  line-height: 1;
+}
+.track-row.active .track-icon { transform: scale(1.12); }
+
+/* name */
+.track-name {
+  flex: 0 0 100px;
+  padding: 0 10px 0 8px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.3s;
+}
+.track-row.active .track-name { color: var(--text); }
+
+/* slider container */
+.track-slider-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* track slider */
+.track-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--track-color, var(--accent)) var(--pct, 0%),
+    var(--border-hi) var(--pct, 0%)
+  );
+  transition: background 0.1s;
+}
+
+.track-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--bg-high);
+  border: 2px solid var(--track-color, var(--border-hi));
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+}
+.track-slider:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+
+/* value badge */
+.track-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-dim);
+  min-width: 18px;
+  text-align: right;
+  transition: color 0.3s;
+}
+.track-row.active .track-val { color: var(--track-color, var(--accent)); }
+
+/* ── SECTION SEPARATOR ──────────────────────────── */
+.section-sep {
+  padding: 18px 20px 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-sep-label {
+  font-family: var(--mono);
+  font-size: 9px;
   letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.section-sep-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── TIMER SECTION ──────────────────────────────── */
+.timer-section {
+  padding: 0 20px 12px;
+}
+
+.timer-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chip:hover { border-color: var(--border-hi); color: var(--text); }
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 400;
+}
+
+.timer-running-row {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-lift);
+}
+.timer-running-row.visible { display: flex; }
+
+.timer-countdown {
+  font-family: var(--mono);
+  font-size: 22px;
+  color: var(--text-hi);
+  letter-spacing: 0.05em;
+  flex: 1;
+}
+
+.timer-bar-wrap {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 100%;
+  transition: width 1s linear;
+}
+
+.timer-cancel-btn {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.timer-cancel-btn:hover { border-color: #f87171; color: #f87171; }
+
+/* ── VISUAL ASMR SECTION ────────────────────────── */
+.vasmr-section {
+  padding: 0 20px 16px;
+}
+
+.vasmr-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.vasmr-label {
+  flex: 1;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.vasmr-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-top: 1px;
+}
+
+/* Toggle switch */
+.toggle-sw {
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  background: var(--bg-high);
+  border: 1px solid var(--border-hi);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.25s, border-color 0.25s;
+  flex-shrink: 0;
+}
+.toggle-sw::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  top: 2px; left: 2px;
+  transition: left 0.25s var(--ease), background 0.25s;
+}
+.toggle-sw.on { background: var(--accent); border-color: var(--accent); }
+.toggle-sw.on::after { left: 22px; background: var(--bg); }
+
+/* vasmr controls */
+.vasmr-controls {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-lift);
+  margin-top: 8px;
+}
+.vasmr-controls.visible { display: flex; }
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ctrl-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-dim);
   min-width: 56px;
 }
 
-.master-slider-wrap {
+.ctrl-slider {
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.vol-icon { font-size: 16px; opacity: 0.5; }
-
-input[type=range] {
+  height: 3px;
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
   border-radius: 2px;
   outline: none;
   cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--pct, 50%),
+    var(--border-hi) var(--pct, 50%)
+  );
 }
-
-input[type=range]::-webkit-slider-track {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border);
-}
-
-input[type=range]::-webkit-slider-thumb {
+.ctrl-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px; height: 20px;
+  width: 18px; height: 18px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 12px rgba(126,184,247,0.5);
-  margin-top: -8px;
-  transition: box-shadow 0.2s;
+  background: var(--text-hi);
+  border: 1.5px solid var(--accent);
 }
 
-input[type=range]:active::-webkit-slider-thumb {
-  box-shadow: 0 0 20px rgba(126,184,247,0.8);
-}
-
-#master-vol {
-  flex: 1;
-  background: linear-gradient(to right, var(--accent) var(--pct,70%), var(--border) var(--pct,70%));
-}
-
-.master-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.pill-btn {
-  flex: 1;
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-dim);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  backdrop-filter: blur(8px);
-}
-
-.pill-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(126,184,247,0.06);
-}
-
-.pill-btn.danger:hover {
-  border-color: var(--danger);
-  color: var(--danger);
-  background: rgba(248,113,113,0.06);
-}
-
-/* ── SOUND CARDS ────────────────────────────────────────────── */
-.section-title {
+.ctrl-val {
+  font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin: 24px 0 12px;
+  color: var(--accent);
+  min-width: 28px;
+  text-align: right;
 }
 
-.sounds-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.sound-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(8px);
-}
-
-.sound-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, var(--card-glow, transparent), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.6s;
-  pointer-events: none;
-}
-
-.sound-card.active {
-  border-color: rgba(126,184,247,0.25);
-  background: rgba(126,184,247,0.06);
-}
-.sound-card.active::before { opacity: 1; }
-
-.sound-card.active .sound-icon { transform: scale(1.1); }
-
-.card-top {
+.mode-chips {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 14px;
+  gap: 6px;
 }
 
-.sound-icon {
-  font-size: 28px;
-  line-height: 1;
-  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-}
-
-.toggle-pill {
-  width: 36px; height: 20px;
-  border-radius: 999px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  position: relative;
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-
-.toggle-pill::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--text-dim);
-  top: 2px; left: 2px;
-  transition: var(--transition);
-}
-
-.sound-card.active .toggle-pill {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-.sound-card.active .toggle-pill::after {
-  left: 18px;
-  background: #fff;
-}
-
-.sound-name {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text);
-  letter-spacing: 0.02em;
-  margin-bottom: 10px;
-  line-height: 1.3;
-}
-
-/* circular knob */
-.knob-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 0 0;
-}
-
-.knob-container {
-  position: relative;
-  width: 56px; height: 56px;
-  cursor: grab;
-}
-.knob-container:active { cursor: grabbing; }
-
-.knob-svg { position: absolute; inset: 0; }
-
-.knob-value {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 300;
-  color: var(--text-dim);
-  pointer-events: none;
-}
-.sound-card.active .knob-value { color: var(--accent); }
-
-/* active pulse ring */
-@keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.4; }
-  100% { transform: scale(1.25); opacity: 0; }
-}
-.sound-card.active .sound-icon::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px solid var(--accent);
-  animation: pulse-ring 2s ease-out infinite;
-}
-.sound-icon { position: relative; display: inline-block; }
-
-/* ── TIMER SECTION ──────────────────────────────────────────── */
-.timer-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-top: 8px;
-  backdrop-filter: blur(16px);
-}
-
-.timer-title {
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.timer-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
+.mode-chip {
+  flex: 1;
+  height: 30px;
+  border-radius: 7px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text-dim);
-  font-family: var(--font-sans);
-  font-size: 12px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s;
 }
-.chip:hover { border-color: var(--accent); color: var(--accent); }
-.chip.active { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 500; }
+.mode-chip.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 
-.timer-countdown {
-  font-family: var(--font-serif);
-  font-size: 40px;
-  font-weight: 300;
-  color: #fff;
-  letter-spacing: 0.05em;
-  text-align: center;
-  margin: 16px 0 8px;
+/* ── VISUAL ASMR OVERLAY ────────────────────────── */
+#vasmr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(6,8,15,0.96);
   display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 20px;
 }
-.timer-countdown.visible { display: block; }
+#vasmr-overlay.visible { display: flex; }
 
-.timer-cancel {
-  display: none;
+#vasmr-canvas {
+  flex: 1;
   width: 100%;
-  margin-top: 8px;
-}
-.timer-countdown.visible + .timer-cancel { display: block; }
-
-/* ── ALARM SECTION ──────────────────────────────────────────── */
-.alarm-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-top: 12px;
-  backdrop-filter: blur(16px);
+  max-height: calc(100dvh - 100px);
+  display: block;
 }
 
-.alarm-row {
+.vasmr-overlay-controls {
+  width: 100%;
+  padding: 12px 20px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.time-input {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: #fff;
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 300;
-  padding: 8px 12px;
-  outline: none;
-  width: 140px;
-  text-align: center;
-  letter-spacing: 0.05em;
-  transition: var(--transition);
-}
-.time-input:focus { border-color: var(--accent); background: rgba(126,184,247,0.06); }
-
-.alarm-arm-btn {
+.vasmr-close-btn {
+  height: 40px;
   flex: 1;
-  height: 50px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
+  border-radius: 10px;
+  border: 1px solid var(--border-hi);
+  background: var(--bg-high);
   color: var(--text);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: var(--transition);
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
 }
-.alarm-arm-btn:hover { border-color: var(--warm); color: var(--warm); background: rgba(244,185,126,0.06); }
-.alarm-arm-btn.armed { background: rgba(244,185,126,0.1); border-color: var(--warm); color: var(--warm); }
+.vasmr-close-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-.alarm-status {
-  font-size: 11px;
-  color: var(--text-dim);
-  text-align: center;
-  margin-top: 10px;
-  min-height: 16px;
-  letter-spacing: 0.05em;
-}
-
-/* ── PRESETS ────────────────────────────────────────────────── */
+/* ── PRESETS PAGE ───────────────────────────────── */
 .presets-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-top: 12px;
-  backdrop-filter: blur(16px);
+  padding: 8px 20px;
 }
 
-.presets-list {
+.preset-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
 }
 
 .preset-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  background: var(--surface2);
-  border-radius: 10px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-lift);
   cursor: pointer;
-  transition: var(--transition);
+  transition: border-color 0.2s, background 0.2s;
 }
-.preset-item:hover { border-color: rgba(126,184,247,0.3); background: rgba(126,184,247,0.05); }
+.preset-item:hover { border-color: var(--border-hi); background: var(--bg-high); }
 
-.preset-name {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text);
-}
+.preset-name { flex: 1; font-size: 13px; color: var(--text); }
 
 .preset-del {
   width: 28px; height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
+  border-radius: 7px;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
   font-size: 14px;
-  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
 }
-.preset-del:hover { border-color: var(--danger); color: var(--danger); }
+.preset-del:hover { border-color: rgba(248,113,113,0.4); color: #f87171; }
 
-.empty-presets {
+.empty-msg {
   text-align: center;
   color: var(--text-dim);
-  font-size: 12px;
-  padding: 16px 0;
-  font-style: italic;
-}
-
-/* ── BOTTOM NAV ─────────────────────────────────────────────── */
-.bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  padding: 12px 16px 20px;
-  background: linear-gradient(to top, var(--bg) 60%, transparent);
-}
-
-.nav-inner {
-  display: flex;
-  gap: 4px;
-  background: rgba(9,13,26,0.8);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 6px;
-  backdrop-filter: blur(20px);
-}
-
-.nav-btn {
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: var(--font-sans);
+  font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex; align-items: center; gap: 6px;
-}
-.nav-btn.active {
-  background: var(--surface2);
-  color: #fff;
+  padding: 32px 0;
+  letter-spacing: 0.05em;
 }
 
-/* ── PAGE SYSTEM ─────────────────────────────────────────────── */
+/* ── PAGE SYSTEM ─────────────────────────────────── */
 .page { display: none; }
 .page.active { display: block; }
 
-/* ── SAVE MODAL ─────────────────────────────────────────────── */
+/* ── MODAL ───────────────────────────────────────── */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   z-index: 200;
-  background: rgba(5,8,16,0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(6,8,15,0.85);
+  backdrop-filter: blur(6px);
   display: none;
   align-items: flex-end;
-  padding: 20px;
+  padding: 16px;
 }
 .modal-overlay.open { display: flex; }
 
 .modal {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  background: #0d1324;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  width: 100%; max-width: 480px; margin: 0 auto;
+  background: #0f1422;
+  border: 1px solid var(--border-hi);
+  border-radius: 16px;
   padding: 24px;
 }
 
 .modal h3 {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 300;
-  color: #fff;
-  margin-bottom: 16px;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin-bottom: 14px;
 }
 
 .modal-input {
   width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  background: var(--bg-high);
+  border: 1px solid var(--border-hi);
   border-radius: 10px;
-  color: #fff;
-  font-family: var(--font-sans);
+  color: var(--text-hi);
+  font-family: var(--sans);
   font-size: 14px;
-  padding: 12px 16px;
+  padding: 12px 14px;
   outline: none;
-  margin-bottom: 16px;
-  transition: var(--transition);
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
 }
 .modal-input:focus { border-color: var(--accent); }
 
 .modal-actions { display: flex; gap: 8px; }
 
 .btn-primary {
-  flex: 1;
-  height: 44px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: var(--bg);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
+  flex: 1; height: 42px;
+  border-radius: 10px; border: none;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--sans); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: filter 0.2s;
 }
 .btn-primary:hover { filter: brightness(1.1); }
 
-.btn-secondary {
-  height: 44px;
-  padding: 0 20px;
+.btn-ghost {
+  height: 42px; padding: 0 18px;
   border-radius: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-hi);
+  background: transparent; color: var(--text-dim);
+  font-family: var(--sans); font-size: 13px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
+
+/* ── NAV ─────────────────────────────────────────── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; justify-content: center;
+  padding: 10px 16px 18px;
+  background: linear-gradient(to top, var(--bg) 55%, transparent);
+}
+
+.nav-inner {
+  display: flex; gap: 4px;
+  background: rgba(11,14,26,0.9);
+  border: 1px solid var(--border-hi);
+  border-radius: 14px;
+  padding: 5px;
+  backdrop-filter: blur(20px);
+}
+
+.nav-btn {
+  height: 38px; padding: 0 20px;
+  border-radius: 10px; border: none;
   background: transparent;
   color: var(--text-dim);
-  font-family: var(--font-sans);
-  font-size: 13px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
 }
-.btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+.nav-btn.active { background: var(--bg-high); color: var(--text-hi); }
 
-/* ── NIGHT MODE ─────────────────────────────────────────────── */
-body.night-mode {
-  --text: #8090b0;
-  --text-dim: #3a4060;
-  --surface: rgba(255,255,255,0.02);
-  --surface2: rgba(255,255,255,0.04);
-}
-body.night-mode * { animation-duration: 3s !important; }
-body.night-mode .logo, body.night-mode .timer-countdown { opacity: 0.6; }
-
-/* ── LIGHT HALO ─────────────────────────────────────────────── */
-#light-halo {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 1s;
-}
-#light-halo.active { opacity: 1; }
-
-/* ── TOAST ──────────────────────────────────────────────────── */
+/* ── TOAST ───────────────────────────────────────── */
 .toast {
   position: fixed;
-  bottom: 100px;
-  left: 50%; transform: translateX(-50%) translateY(20px);
-  background: rgba(9,13,26,0.95);
-  border: 1px solid var(--border);
+  bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(11,14,26,0.97);
+  border: 1px solid var(--border-hi);
   border-radius: 999px;
-  padding: 10px 20px;
-  font-size: 12px;
+  padding: 9px 20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
   color: var(--text);
-  letter-spacing: 0.05em;
-  z-index: 300;
+  z-index: 500;
   opacity: 0;
-  transition: all 0.3s;
+  transition: opacity 0.25s, transform 0.25s;
   white-space: nowrap;
+  pointer-events: none;
   backdrop-filter: blur(12px);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ── WAVEFORM ANIM ──────────────────────────────────────────── */
-.wave-bars {
+/* ── DIM OVERLAY ─────────────────────────────────── */
+#dim-overlay {
+  position: fixed; inset: 0;
+  z-index: 40;
+  background: var(--dim-mode);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s;
+}
+#dim-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── WAVEFORM INDICATOR ─────────────────────────── */
+.wave {
   display: flex;
   align-items: center;
   gap: 2px;
-  height: 12px;
+  height: 14px;
+  width: 20px;
+  flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.4s;
+  transition: opacity 0.3s;
 }
-.sound-card.active .wave-bars { opacity: 1; }
+.track-row.active .wave { opacity: 1; }
 
 .wave-bar {
   width: 2px;
-  background: var(--accent);
   border-radius: 1px;
-  animation: wave-dance 0.8s ease-in-out infinite alternate;
-  opacity: 0.6;
+  background: var(--track-color, var(--accent));
+  animation: wave-anim 0.7s ease-in-out infinite alternate;
+  opacity: 0.7;
 }
-.wave-bar:nth-child(1) { animation-delay: 0s; }
-.wave-bar:nth-child(2) { animation-delay: 0.1s; }
-.wave-bar:nth-child(3) { animation-delay: 0.2s; }
-.wave-bar:nth-child(4) { animation-delay: 0.15s; }
-.wave-bar:nth-child(5) { animation-delay: 0.05s; }
+.wave-bar:nth-child(1) { animation-delay: 0s;    height: 4px; }
+.wave-bar:nth-child(2) { animation-delay: 0.12s; height: 8px; }
+.wave-bar:nth-child(3) { animation-delay: 0.07s; height: 5px; }
 
-@keyframes wave-dance {
-  from { height: 3px; }
-  to { height: 12px; }
+@keyframes wave-anim {
+  from { transform: scaleY(0.4); }
+  to   { transform: scaleY(1); }
 }
 
-/* ── SCROLLBAR ──────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; }
+/* ── SCROLLBAR ───────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-/* ── RESPONSIVE ─────────────────────────────────────────────── */
-@media(min-width: 520px) {
-  .sounds-grid { grid-template-columns: repeat(3, 1fr); }
-}
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
 </style>
 </head>
 <body>
 
-<!-- Ambient canvas -->
+<!-- Ambient background -->
 <canvas id="bg-canvas"></canvas>
 
-<!-- Light halo overlay -->
-<canvas id="light-halo"></canvas>
+<!-- Dim overlay (bouton lune) -->
+<div id="dim-overlay"></div>
+
+<!-- Visual ASMR overlay -->
+<div id="vasmr-overlay">
+  <canvas id="vasmr-canvas"></canvas>
+  <div class="vasmr-overlay-controls">
+    <button class="vasmr-close-btn" id="vasmr-close-btn">✕ Fermer Visual ASMR</button>
+  </div>
+</div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Save preset modal -->
+<!-- Save modal -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <h3>Sauvegarder l'ambiance</h3>
-    <input class="modal-input" id="preset-name-input" type="text" placeholder="Ex: Nuit de pluie..." maxlength="40"/>
+    <h3>Sauvegarder</h3>
+    <input class="modal-input" id="preset-name-input" type="text" placeholder="Nom de l'ambiance…" maxlength="40"/>
     <div class="modal-actions">
-      <button class="btn-secondary" id="modal-cancel">Annuler</button>
+      <button class="btn-ghost" id="modal-cancel">Annuler</button>
       <button class="btn-primary" id="modal-save">Sauvegarder</button>
     </div>
   </div>
 </div>
 
-<!-- App -->
+<!-- ════ APP ════ -->
 <div class="app">
 
-  <!-- ── HEADER ── -->
+  <!-- HEADER -->
   <div class="header">
-    <div class="logo">
-      Somnia
-      <span>Ambiance & Réveil</span>
+    <div class="wordmark">
+      <div class="wordmark-title">Somnia</div>
+      <div class="wordmark-sub">Table de mixage ASMR</div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="btn-night" title="Mode nuit">🌙</button>
-      <button class="icon-btn" id="btn-light" title="Lumière ambiante">💡</button>
+      <button class="hdr-btn" id="btn-dim" title="Réduire la luminosité">🌙</button>
+      <button class="hdr-btn" id="btn-save-preset" title="Sauvegarder">💾</button>
+      <button class="hdr-btn" id="btn-random" title="Aléatoire">🎲</button>
     </div>
   </div>
 
-  <!-- ── PAGE: MIX ── -->
+  <!-- MASTER VOLUME -->
+  <div class="master-row">
+    <span class="master-label">Maître</span>
+    <div class="master-vol-wrap">
+      <input type="range" class="slider-master" id="master-vol"
+             min="0" max="10" value="8" step="1"/>
+      <span class="master-vol-val" id="master-vol-val">8</span>
+    </div>
+    <div class="master-actions">
+      <button class="ghost-btn danger" id="btn-stop">⏹ Stop</button>
+    </div>
+  </div>
+
+  <!-- PAGE: MIX -->
   <div class="page active" id="page-mix">
 
-    <!-- Master -->
-    <div class="master-section">
-      <div class="master-row">
-        <span class="master-label">Volume</span>
-        <div class="master-slider-wrap">
-          <span class="vol-icon">🔈</span>
-          <input type="range" id="master-vol" min="0" max="100" value="70"/>
-          <span class="vol-icon">🔊</span>
-        </div>
-      </div>
-      <div class="master-actions">
-        <button class="pill-btn" id="btn-random">🎲 Aléatoire</button>
-        <button class="pill-btn" id="btn-save">💾 Sauvegarder</button>
-        <button class="pill-btn danger" id="btn-stop">⏹ Tout arrêter</button>
-      </div>
+    <!-- TRACK LIST -->
+    <div class="track-list" id="track-list"></div>
+
+    <!-- TIMER -->
+    <div class="section-sep">
+      <span class="section-sep-label">Minuteur</span>
+      <div class="section-sep-line"></div>
     </div>
 
-    <div class="section-title">Sons</div>
-
-    <!-- Sound cards (generated by JS) -->
-    <div class="sounds-grid" id="sounds-grid"></div>
-
-    <!-- Sleep timer -->
-    <div class="section-title" style="margin-top:28px">Minuteur d'endormissement</div>
     <div class="timer-section">
       <div class="timer-chips" id="timer-chips">
         <button class="chip" data-min="15">15 min</button>
         <button class="chip" data-min="30">30 min</button>
         <button class="chip" data-min="45">45 min</button>
-        <button class="chip" data-min="60">1 heure</button>
+        <button class="chip" data-min="60">1 h</button>
       </div>
-      <div class="timer-countdown" id="timer-countdown"></div>
-      <button class="pill-btn danger timer-cancel" id="timer-cancel">Annuler le minuteur</button>
+      <div class="timer-running-row" id="timer-running-row">
+        <div class="timer-countdown" id="timer-countdown">--:--</div>
+        <div class="timer-bar-wrap">
+          <div class="timer-bar-fill" id="timer-bar-fill"></div>
+        </div>
+        <button class="timer-cancel-btn" id="timer-cancel-btn" title="Annuler">✕</button>
+      </div>
     </div>
 
-    <!-- Alarm -->
-    <div class="section-title" style="margin-top:16px">Réveil progressif</div>
-    <div class="alarm-section">
-      <div class="alarm-row">
-        <input type="time" class="time-input" id="alarm-time" value="07:00"/>
-        <button class="alarm-arm-btn" id="alarm-arm-btn">
-          <span>🔔</span> Armer le réveil
+    <!-- VISUAL ASMR -->
+    <div class="section-sep">
+      <span class="section-sep-label">Visual ASMR</span>
+      <div class="section-sep-line"></div>
+    </div>
+
+    <div class="vasmr-section">
+      <div class="vasmr-toggle-row">
+        <div class="vasmr-label">
+          Point lumineux
+          <span class="vasmr-sub">EMDR / Focus visuel</span>
+        </div>
+        <div class="toggle-sw" id="vasmr-toggle"></div>
+      </div>
+
+      <div class="vasmr-controls" id="vasmr-controls">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Vitesse</span>
+          <input type="range" class="ctrl-slider" id="vasmr-speed"
+                 min="1" max="10" value="4" step="1"/>
+          <span class="ctrl-val" id="vasmr-speed-val">4</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Mode</span>
+          <div class="mode-chips">
+            <button class="mode-chip active" id="mode-linear" data-mode="linear">← → Latéral</button>
+            <button class="mode-chip" id="mode-free" data-mode="free">◎ Libre</button>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Son clic</span>
+          <div class="toggle-sw" id="vasmr-click-toggle"></div>
+          <span class="ctrl-val" style="font-size:9px; color: var(--text-dim)">clic</span>
+        </div>
+        <button class="ghost-btn" id="vasmr-open-btn"
+                style="width:100%; margin-top:4px; font-size:10px;">
+          ▶ Ouvrir en plein écran
         </button>
       </div>
-      <div class="alarm-status" id="alarm-status"></div>
     </div>
 
   </div><!-- end page-mix -->
 
-  <!-- ── PAGE: PRESETS ── -->
+  <!-- PAGE: PRESETS -->
   <div class="page" id="page-presets">
-    <div style="padding-top:24px">
-      <div class="section-title">Presets sauvegardés</div>
-      <div class="presets-section">
-        <div class="presets-list" id="presets-list"></div>
-      </div>
+    <div class="section-sep" style="padding-top:20px">
+      <span class="section-sep-label">Presets</span>
+      <div class="section-sep-line"></div>
+    </div>
+    <div class="presets-section">
+      <div class="preset-list" id="preset-list"></div>
     </div>
   </div>
 
 </div><!-- end .app -->
 
-<!-- Bottom nav -->
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <div class="nav-inner">
-    <button class="nav-btn active" data-page="mix" id="nav-mix">🎛 Mix</button>
-    <button class="nav-btn" data-page="presets" id="nav-presets">📁 Presets</button>
+    <button class="nav-btn active" id="nav-mix" data-page="mix">🎛 Mix</button>
+    <button class="nav-btn" id="nav-presets" data-page="presets">📁 Presets</button>
   </div>
 </div>
 
 <script>
-/* ════════════════════════════════════════════════════════════════
-   SOMNIA — Audio Engine + UI
-   ════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   SOMNIA v2 — Moteur audio + Visual ASMR + UI
+   ═══════════════════════════════════════════════════════════════════ */
 
-// ── SOUND DEFINITIONS ──────────────────────────────────────────
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────
+// DÉFINITION DES SONS
+// Chaque son peut avoir un fichier audio OU utiliser le générateur.
+// Pour utiliser vos fichiers : remplissez le champ "file".
+// Ex: file: 'assets/audio/rain.m4a'
+// Si "file" est absent ou que le chargement échoue → générateur.
+// ─────────────────────────────────────────────────────────────────
 const SOUNDS = [
-  { id:'rain',    name:'Pluie douce',      icon:'🌧',  color:'#7eb8f7', generate:'rain'      },
-  { id:'thunder', name:'Orage lointain',   icon:'⛈',   color:'#a78bfa', generate:'thunder'   },
-  { id:'wind',    name:'Vent léger',       icon:'🌬',   color:'#a0d4b0', generate:'wind'      },
-  { id:'forest',  name:'Forêt nocturne',   icon:'🌲',   color:'#4ade80', generate:'forest'    },
-  { id:'birds',   name:'Oiseaux du matin', icon:'🐦',   color:'#fbbf24', generate:'birds'     },
-  { id:'river',   name:'Rivière',          icon:'💧',   color:'#38bdf8', generate:'river'     },
-  { id:'fire',    name:'Feu de cheminée',  icon:'🔥',   color:'#fb923c', generate:'fire'      },
-  { id:'white',   name:'Bruit blanc',      icon:'📻',   color:'#e2e8f0', generate:'white'     },
-  { id:'taps',    name:'Taps ASMR',        icon:'✋',   color:'#f9a8d4', generate:'taps'      },
-  { id:'bowl',    name:'Bols tibétains',   icon:'🔔',   color:'#fde68a', generate:'bowl'      },
-  { id:'breath',  name:'Respiration',      icon:'🫁',   color:'#c4b5fd', generate:'breath'    },
-  { id:'texture', name:'Texture douce',    icon:'🧶',   color:'#fdba74', generate:'texture'   },
+  { id:'rain',    name:'Pluie douce',      icon:'🌧',  color:'#6ba4e8', file:'assets/audio/rain.m4a',    gen:'rain'    },
+  { id:'thunder', name:'Orage lointain',   icon:'⛈',   color:'#9b7fe8', file:'assets/audio/thunder.m4a', gen:'thunder' },
+  { id:'wind',    name:'Vent',             icon:'🌬',   color:'#5fbfa0', file:'assets/audio/wind.m4a',    gen:'wind'    },
+  { id:'forest',  name:'Forêt',            icon:'🌲',   color:'#4ade80', file:'assets/audio/forest.m4a',  gen:'forest'  },
+  { id:'birds',   name:'Oiseaux',          icon:'🐦',   color:'#fbbf24', file:'assets/audio/birds.m4a',   gen:'birds'   },
+  { id:'river',   name:'Rivière',          icon:'💧',   color:'#38bdf8', file:'assets/audio/river.m4a',   gen:'river'   },
+  { id:'fire',    name:'Feu de cheminée',  icon:'🔥',   color:'#fb923c', file:'assets/audio/fire.m4a',    gen:'fire'    },
+  { id:'white',   name:'Bruit blanc',      icon:'📻',   color:'#94a3b8', file:'assets/audio/white.m4a',   gen:'white'   },
+  { id:'taps',    name:'Taps ASMR',        icon:'✋',   color:'#f9a8d4', file:'assets/audio/taps.m4a',    gen:'taps'    },
+  { id:'bowl',    name:'Bols tibétains',   icon:'🔔',   color:'#fde68a', file:'assets/audio/bowl.m4a',    gen:'bowl'    },
+  { id:'breath',  name:'Respiration',      icon:'🫁',   color:'#c4b5fd', file:'assets/audio/breath.m4a',  gen:'breath'  },
+  { id:'texture', name:'Texture',          icon:'🧶',   color:'#fdba74', file:'assets/audio/texture.m4a', gen:'texture' },
 ];
 
-// ── AUDIO ENGINE ───────────────────────────────────────────────
-class AudioMixer {
+// ─────────────────────────────────────────────────────────────────
+// MOTEUR AUDIO
+// ─────────────────────────────────────────────────────────────────
+class AudioEngine {
   constructor() {
-    this.ctx = null;
-    this.masterGain = null;
-    this.tracks = {};
-    this.masterVolume = 0.7;
-    this.initialized = false;
+    this.ctx         = null;
+    this.masterGain  = null;
+    this.tracks      = {};      // { id: TrackNode }
+    this.buffers     = {};      // { id: AudioBuffer } — fichiers décodés
+    this.masterVol   = 0.8;
+    this.ready       = false;
   }
 
+  // Initialise le contexte audio (nécessite un geste utilisateur)
   async init() {
-    if (this.initialized) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this.ready) return;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.value = this.masterVolume;
+    this.masterGain.gain.setValueAtTime(this.masterVol, this.ctx.currentTime);
     this.masterGain.connect(this.ctx.destination);
-    this.initialized = true;
+    this.ready = true;
   }
 
   async resume() {
-    if (this.ctx && this.ctx.state === 'suspended') {
-      await this.ctx.resume();
-    }
+    if (this.ctx && this.ctx.state === 'suspended') await this.ctx.resume();
   }
 
-  // ── SOUND GENERATORS ────────────────────────────────────────
-  generateBuffer(type, duration = 4) {
-    const sr = this.ctx.sampleRate;
-    const len = sr * duration;
-    const buf = this.ctx.createBuffer(2, len, sr);
+  // ── Chargement fichier audio ──────────────────────────────────
+  // Essaie de charger le fichier ; en cas d'échec → génération procédurale
+  async loadBuffer(sound) {
+    if (this.buffers[sound.id]) return;
 
-    const L = buf.getChannelData(0);
-    const R = buf.getChannelData(1);
-
-    // Helpers
-    const noise = () => Math.random() * 2 - 1;
-    const lerp = (a, b, t) => a + (b - a) * t;
-
-    // Simple one-pole lowpass
-    function lowpass(data, cutoff) {
-      const rc = 1 - cutoff;
-      let s = 0;
-      for (let i = 0; i < data.length; i++) {
-        s = s * rc + data[i] * (1 - rc);
-        data[i] = s;
+    if (sound.file) {
+      try {
+        const res = await fetch(sound.file);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ab  = await res.arrayBuffer();
+        const buf = await this.ctx.decodeAudioData(ab);
+        this.buffers[sound.id] = buf;
+        return;
+      } catch (e) {
+        console.warn(`[Somnia] Fichier "${sound.file}" non trouvé — fallback générateur`, e.message);
       }
     }
 
-    // Bandpass via two lowpasses
-    function bandpass(data, lo, hi) {
-      const a = [...data], b = [...data];
-      lowpass(a, lo); lowpass(b, hi);
-      for (let i = 0; i < data.length; i++) data[i] = b[i] - a[i];
+    // Fallback : génération procédurale
+    this.buffers[sound.id] = this._generate(sound.gen);
+  }
+
+  // ── Démarrage d'une piste avec fade in ──────────────────────
+  async startTrack(id, volume) {
+    await this.resume();
+    const sound = SOUNDS.find(s => s.id === id);
+    if (!sound) return;
+
+    // Charger le buffer si nécessaire
+    if (!this.buffers[id]) await this.loadBuffer(sound);
+
+    // Si déjà actif, juste ajuster le gain
+    if (this.tracks[id] && this.tracks[id].active) {
+      this.setTrackVolume(id, volume);
+      return;
     }
 
-    switch(type) {
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.4);
+    gainNode.connect(this.masterGain);
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.buffers[id];
+    src.loop = true;
+
+    // Crossfade propre sur le point de bouclage
+    src.loopStart = 0;
+    src.loopEnd   = src.buffer.duration;
+
+    src.connect(gainNode);
+    src.start(0);
+
+    this.tracks[id] = { src, gainNode, active: true, volume };
+  }
+
+  // ── Arrêt d'une piste avec fade out ─────────────────────────
+  stopTrack(id) {
+    const t = this.tracks[id];
+    if (!t || !t.active) return;
+    const endTime = this.ctx.currentTime + 0.45;
+    t.gainNode.gain.linearRampToValueAtTime(0, endTime);
+    const srcRef = t.src;
+    setTimeout(() => {
+      try { srcRef.stop(); } catch (_) {}
+      try { srcRef.disconnect(); } catch (_) {}
+      try { t.gainNode.disconnect(); } catch (_) {}
+    }, 500);
+    t.active = false;
+    delete this.tracks[id];
+  }
+
+  // ── Ajustement du volume (avec ramp) ────────────────────────
+  setTrackVolume(id, volume) {
+    const t = this.tracks[id];
+    if (!t) return;
+    t.volume = volume;
+    t.gainNode.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.12);
+  }
+
+  // ── Volume maître ────────────────────────────────────────────
+  setMasterVolume(vol) {
+    this.masterVol = vol;
+    if (this.masterGain) {
+      this.masterGain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.12);
+    }
+  }
+
+  // ── Fade maître vers une valeur sur une durée ────────────────
+  fadeMasterTo(target, durationSec) {
+    if (!this.masterGain) return;
+    this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.ctx.currentTime);
+    this.masterGain.gain.linearRampToValueAtTime(target, this.ctx.currentTime + durationSec);
+  }
+
+  // ── Arrêt de tout ────────────────────────────────────────────
+  stopAll() {
+    for (const id of Object.keys(this.tracks)) this.stopTrack(id);
+  }
+
+  // ── Clic ASMR (son court synthétique) ───────────────────────
+  playClick() {
+    if (!this.ready) return;
+    const osc  = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.06);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.07);
+  }
+
+  // ── Snapshot de l'état ──────────────────────────────────────
+  getState() {
+    const state = {};
+    for (const s of SOUNDS) {
+      const t = this.tracks[s.id];
+      state[s.id] = {
+        active: !!(t && t.active),
+        volume: t ? t.volume : 0,
+      };
+    }
+    return state;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // GÉNÉRATEUR AUDIO PROCÉDURAL (fallback)
+  // ─────────────────────────────────────────────────────────────
+  _generate(type) {
+    const sr  = this.ctx.sampleRate;
+    const dur = 8; // secondes de boucle
+    const len = sr * dur;
+    const buf = this.ctx.createBuffer(2, len, sr);
+    const L   = buf.getChannelData(0);
+    const R   = buf.getChannelData(1);
+    const rnd = () => Math.random() * 2 - 1;
+
+    // Filtre passe-bas simple
+    const lp = (data, k) => {
+      let s = 0;
+      for (let i = 0; i < data.length; i++) {
+        s = s * k + data[i] * (1 - k);
+        data[i] = s;
+      }
+    };
+
+    switch (type) {
       case 'rain': case 'white': {
-        for (let i = 0; i < len; i++) {
-          L[i] = noise() * 0.35;
-          R[i] = noise() * 0.35;
-        }
+        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.35; R[i] = rnd() * 0.35; }
         if (type === 'rain') {
-          lowpass(L, 0.08); lowpass(R, 0.08);
-          // add occasional drip spikes
-          for (let i = 0; i < len; i++) {
-            if (Math.random() < 0.0008) {
-              const spike = noise() * 0.6;
-              const pos = i;
-              for (let j = 0; j < 40 && pos+j < len; j++) {
-                L[pos+j] += spike * Math.exp(-j * 0.15);
-                R[pos+j] += spike * 0.8 * Math.exp(-j * 0.15);
-              }
+          lp(L, 0.92); lp(R, 0.92);
+          for (let i = 0; i < len; i++) if (Math.random() < 0.0008) {
+            const amp = 0.4 + Math.random() * 0.3;
+            for (let j = 0; j < 60 && i + j < len; j++) {
+              L[i+j] += amp * rnd() * Math.exp(-j * 0.12);
+              R[i+j] += amp * rnd() * 0.8 * Math.exp(-j * 0.12);
             }
           }
         }
         break;
       }
-
       case 'wind': {
+        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
+        lp(L, 0.96); lp(R, 0.96);
         for (let i = 0; i < len; i++) {
-          L[i] = noise(); R[i] = noise();
-        }
-        lowpass(L, 0.04); lowpass(R, 0.04);
-        // slow amplitude modulation
-        for (let i = 0; i < len; i++) {
-          const mod = 0.5 + 0.5 * Math.sin(i / sr * 0.3 + Math.random() * 0.001);
-          L[i] *= mod * 0.5;
-          R[i] *= mod * 0.5;
+          const m = 0.5 + 0.5 * Math.sin(i / sr * 0.25);
+          L[i] *= m * 0.5; R[i] *= m * 0.5;
         }
         break;
       }
-
       case 'thunder': {
-        // mostly silence with rumbles
-        for (let i = 0; i < len; i++) {
-          L[i] = noise() * 0.02; R[i] = noise() * 0.02;
-        }
-        lowpass(L, 0.015); lowpass(R, 0.015);
-        // 1-3 rumbles
-        const numRumbles = 1 + Math.floor(Math.random() * 2);
-        for (let r = 0; r < numRumbles; r++) {
-          const start = Math.floor(Math.random() * (len * 0.6) + len * 0.1);
-          const rumbleLen = Math.floor(sr * (0.4 + Math.random() * 0.8));
-          for (let i = 0; i < rumbleLen && start+i < len; i++) {
-            const env = Math.sin(Math.PI * i / rumbleLen);
-            const n = noise() * env * 0.7;
-            L[start+i] += n;
-            R[start+i] += n * 0.9 + noise() * 0.05 * env;
+        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.02; R[i] = rnd() * 0.02; }
+        lp(L, 0.985); lp(R, 0.985);
+        [[0.15, 0.8], [0.6, 0.55]].forEach(([frac, amp]) => {
+          const start = Math.floor(frac * len);
+          const rlen  = Math.floor(sr * 0.9);
+          for (let i = 0; i < rlen && start + i < len; i++) {
+            const env = Math.sin(Math.PI * i / rlen) ** 2;
+            const v   = rnd() * amp * env;
+            L[start+i] += v; R[start+i] += v * 0.85;
           }
-        }
-        lowpass(L, 0.04); lowpass(R, 0.04);
+        });
+        lp(L, 0.96); lp(R, 0.96);
         break;
       }
-
-      case 'river': {
-        for (let i = 0; i < len; i++) {
-          L[i] = noise(); R[i] = noise();
-        }
-        // mid-range bandpass = babbling water feel
-        bandpass(L, 0.03, 0.15); bandpass(R, 0.03, 0.15);
-        for (let i = 0; i < len; i++) { L[i] *= 0.4; R[i] *= 0.4; }
-        break;
-      }
-
       case 'forest': {
-        // subtle low drone + sparse chirps
-        for (let i = 0; i < len; i++) {
-          L[i] = noise() * 0.05; R[i] = noise() * 0.05;
-        }
-        lowpass(L, 0.02); lowpass(R, 0.02);
-        // chirps
-        for (let c = 0; c < 8; c++) {
-          const freq = 2000 + Math.random() * 2000;
-          const start = Math.floor(Math.random() * len);
-          const chirpLen = Math.floor(sr * 0.05);
-          for (let i = 0; i < chirpLen && start+i < len; i++) {
-            const env = Math.sin(Math.PI * i / chirpLen);
-            const sig = Math.sin(2 * Math.PI * freq * i / sr) * env * 0.12;
-            L[start+i] += sig; R[start+i] += sig * 0.8;
+        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.05; R[i] = rnd() * 0.05; }
+        lp(L, 0.98); lp(R, 0.98);
+        for (let c = 0; c < 10; c++) {
+          const f = 2000 + Math.random() * 2500;
+          const s = Math.floor(Math.random() * len);
+          const cl = Math.floor(sr * 0.06);
+          for (let i = 0; i < cl && s + i < len; i++) {
+            const e = Math.sin(Math.PI * i / cl);
+            L[s+i] += Math.sin(2 * Math.PI * f * i / sr) * e * 0.1;
+            R[s+i] += Math.sin(2 * Math.PI * f * i / sr) * e * 0.08;
           }
         }
         break;
       }
-
       case 'birds': {
-        for (let i = 0; i < len; i++) {
-          L[i] = noise() * 0.02; R[i] = noise() * 0.02;
-        }
-        // melodic chirp sequences
-        const freqs = [2200,2800,3100,2500,1800,3400];
-        for (let c = 0; c < 12; c++) {
-          const freq = freqs[Math.floor(Math.random() * freqs.length)];
-          const start = Math.floor(Math.random() * (len - sr * 0.2));
-          const chirpLen = Math.floor(sr * (0.08 + Math.random() * 0.12));
-          const freqSlide = freq * (0.9 + Math.random() * 0.3);
-          for (let i = 0; i < chirpLen && start+i < len; i++) {
-            const t = i / chirpLen;
-            const env = Math.sin(Math.PI * t);
-            const f = lerp(freq, freqSlide, t);
-            const sig = Math.sin(2 * Math.PI * f * i / sr) * env * 0.18;
-            L[start+i] += sig + noise() * 0.01;
-            R[start+i] += sig * 0.7 + noise() * 0.01;
+        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.015; R[i] = rnd() * 0.015; }
+        const freqs = [2200, 2800, 3100, 2600, 1900, 3400];
+        for (let c = 0; c < 14; c++) {
+          const f  = freqs[Math.floor(Math.random() * freqs.length)];
+          const f2 = f * (0.9 + Math.random() * 0.25);
+          const s  = Math.floor(Math.random() * (len - sr * 0.2));
+          const cl = Math.floor(sr * (0.07 + Math.random() * 0.12));
+          for (let i = 0; i < cl && s + i < len; i++) {
+            const t  = i / cl;
+            const e  = Math.sin(Math.PI * t);
+            const ff = f + (f2 - f) * t;
+            L[s+i] += Math.sin(2 * Math.PI * ff * i / sr) * e * 0.18;
+            R[s+i] += Math.sin(2 * Math.PI * (ff + 2) * i / sr) * e * 0.12;
           }
         }
         break;
       }
-
+      case 'river': {
+        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
+        const Lh = [...L], Rh = [...R];
+        lp(L, 0.98); lp(R, 0.98); lp(Lh, 0.88); lp(Rh, 0.88);
+        for (let i = 0; i < len; i++) { L[i] = (Lh[i] - L[i]) * 0.4; R[i] = (Rh[i] - R[i]) * 0.4; }
+        break;
+      }
       case 'fire': {
-        for (let i = 0; i < len; i++) {
-          L[i] = noise(); R[i] = noise();
-        }
-        lowpass(L, 0.05); lowpass(R, 0.05);
-        // crackle pops
+        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
+        lp(L, 0.95); lp(R, 0.95);
         for (let i = 0; i < len; i++) {
           if (Math.random() < 0.001) {
-            const amp = 0.3 + Math.random() * 0.4;
-            const decayLen = Math.floor(30 + Math.random() * 80);
-            for (let j = 0; j < decayLen && i+j < len; j++) {
-              L[i+j] += noise() * amp * Math.exp(-j * 0.08);
-              R[i+j] += noise() * amp * 0.8 * Math.exp(-j * 0.08);
+            const amp = 0.2 + Math.random() * 0.35;
+            for (let j = 0; j < 80 && i + j < len; j++) {
+              L[i+j] += rnd() * amp * Math.exp(-j * 0.08);
+              R[i+j] += rnd() * amp * 0.85 * Math.exp(-j * 0.08);
             }
           }
           L[i] *= 0.4; R[i] *= 0.4;
         }
         break;
       }
-
       case 'taps': {
-        // periodic gentle taps
-        for (let i = 0; i < len; i++) {
-          L[i] = noise() * 0.01; R[i] = noise() * 0.01;
-        }
-        const tapInterval = Math.floor(sr * (0.6 + Math.random() * 0.8));
-        for (let t = 0; t < len; t += tapInterval) {
-          const tapLen = Math.floor(sr * 0.04);
-          const amp = 0.2 + Math.random() * 0.25;
-          const side = Math.random() > 0.5 ? 1 : -1;
-          for (let i = 0; i < tapLen && t+i < len; i++) {
-            const env = Math.exp(-i * 0.15);
-            const sig = noise() * amp * env;
-            L[t+i] += sig + sig * 0.3 * side;
-            R[t+i] += sig - sig * 0.3 * side;
+        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.01; R[i] = rnd() * 0.01; }
+        let pos = Math.floor(sr * 0.1);
+        const interval = Math.floor(sr * 0.7);
+        while (pos < len) {
+          const amp = 0.2 + Math.random() * 0.22;
+          for (let j = 0; j < 80 && pos + j < len; j++) {
+            const e = Math.exp(-j * 0.1);
+            L[pos+j] += rnd() * amp * e;
+            R[pos+j] += rnd() * amp * e * 0.7;
           }
-          // slight delay variation
-          t += Math.floor((Math.random() - 0.5) * sr * 0.2);
+          pos += interval + Math.floor((Math.random() - 0.5) * sr * 0.25);
         }
         break;
       }
-
       case 'bowl': {
-        // decaying sine tones
-        const baseFreq = 200 + Math.random() * 80;
-        for (let i = 0; i < len; i++) {
-          L[i] = 0; R[i] = 0;
-        }
-        // strike at start and maybe midway
-        const strikes = [0, Math.floor(len * 0.5)];
-        for (const start of strikes) {
-          const decayTime = sr * 2.5;
-          for (let i = 0; i < decayTime && start+i < len; i++) {
-            const env = Math.exp(-i / (sr * 2.5));
-            // fundamental + 2nd harmonic (slightly detuned for bowl shimmer)
-            const sig = (
-              Math.sin(2*Math.PI*baseFreq*i/sr) * env * 0.4 +
-              Math.sin(2*Math.PI*baseFreq*2.76*i/sr) * env * 0.15 +
-              Math.sin(2*Math.PI*baseFreq*5.4*i/sr) * env * 0.06
-            );
-            L[start+i] += sig;
-            R[start+i] += sig * 0.85 + Math.sin(2*Math.PI*(baseFreq+1.5)*i/sr) * env * 0.15;
-          }
-        }
+        const base = 220 + Math.random() * 60;
+        [[1.0, 0.5], [2.76, 0.18], [5.4, 0.07]].forEach(([h, amp]) => {
+          [0, Math.floor(len * 0.5)].forEach(start => {
+            const decay = sr * 2.8;
+            for (let i = 0; i < decay && start + i < len; i++) {
+              const e = Math.exp(-i / decay * 2);
+              L[start+i] += Math.sin(2 * Math.PI * base * h * i / sr) * amp * e;
+              R[start+i] += Math.sin(2 * Math.PI * (base * h + 1.5) * i / sr) * amp * 0.85 * e;
+            }
+          });
+        });
         break;
       }
-
       case 'breath': {
-        // slow sinusoidal amplitude modulated noise = breathing
-        const cycleLen = sr * 4; // 4s breath cycle
+        const cycle = sr * 4.5;
         for (let i = 0; i < len; i++) {
-          const breathEnv = 0.3 + 0.7 * Math.pow(Math.sin(Math.PI * i / cycleLen), 2);
-          L[i] = noise() * breathEnv * 0.35;
-          R[i] = noise() * breathEnv * 0.35;
+          const e = 0.25 + 0.75 * Math.sin(Math.PI * i / cycle) ** 2;
+          L[i] = rnd() * e * 0.35; R[i] = rnd() * e * 0.35;
         }
-        lowpass(L, 0.06); lowpass(R, 0.06);
+        lp(L, 0.94); lp(R, 0.94);
         break;
       }
-
       case 'texture': {
-        // slow filtered noise swells
+        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
+        lp(L, 0.97); lp(R, 0.97);
         for (let i = 0; i < len; i++) {
-          L[i] = noise(); R[i] = noise();
-        }
-        lowpass(L, 0.03); lowpass(R, 0.03);
-        for (let i = 0; i < len; i++) {
-          const mod = 0.4 + 0.6 * Math.abs(Math.sin(i / sr * 0.15));
-          L[i] *= mod * 0.35;
-          R[i] *= mod * 0.35;
+          const m = 0.4 + 0.6 * Math.abs(Math.sin(Math.PI * 0.12 * i / sr));
+          L[i] *= m * 0.35; R[i] *= m * 0.35;
         }
         break;
+      }
+      default: {
+        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.2; R[i] = rnd() * 0.2; }
       }
     }
 
     return buf;
   }
+}
 
-  async loadTrack(sound) {
-    if (this.tracks[sound.id]) return;
-    const buf = this.generateBuffer(sound.generate, 6);
-    const gainNode = this.ctx.createGain();
-    gainNode.gain.value = 0.75;
-    gainNode.connect(this.masterGain);
+// ─────────────────────────────────────────────────────────────────
+// VISUAL ASMR ENGINE
+// ─────────────────────────────────────────────────────────────────
+class VisualASMR {
+  constructor(canvas, engine) {
+    this.canvas  = canvas;
+    this.engine  = engine;
+    this.ctx     = canvas.getContext('2d');
+    this.running = false;
+    this.raf     = null;
+    this.mode    = 'linear';   // 'linear' | 'free'
+    this.speed   = 4;          // 1–10
+    this.clickOn = true;
 
-    this.tracks[sound.id] = {
-      buffer: buf,
-      gainNode,
-      source: null,
-      volume: 0.75,
-      active: false,
-    };
+    // Position & vélocité
+    this.x  = 0.5;  // 0–1 normalisé
+    this.y  = 0.5;
+    this.vx = 1;    // direction (linéaire)
+    this.vy = 0.7;  // (libre)
+
+    // Phase pour mouvement sinusoïdal doux
+    this.phase  = 0;
+    this.lastClick = 0; // timestamp dernier clic sonore
   }
 
-  startTrack(id) {
-    const track = this.tracks[id];
-    if (!track || track.active) return;
-    const src = this.ctx.createBufferSource();
-    src.buffer = track.buffer;
-    src.loop = true;
-    src.loopStart = 0;
-    src.loopEnd = track.buffer.duration;
-    src.connect(track.gainNode);
-    // fade in
-    track.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
-    track.gainNode.gain.linearRampToValueAtTime(track.volume, this.ctx.currentTime + 0.8);
-    src.start(0);
-    track.source = src;
-    track.active = true;
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const r   = this.canvas.getBoundingClientRect();
+    this.canvas.width  = r.width  * dpr;
+    this.canvas.height = r.height * dpr;
+    this.ctx.scale(dpr, dpr);
+    this._w = r.width;
+    this._h = r.height;
   }
 
-  stopTrack(id, immediate = false) {
-    const track = this.tracks[id];
-    if (!track || !track.active) return;
-    const src = track.source;
-    if (immediate) {
-      try { src.stop(); } catch(e) {}
+  start() {
+    if (this.running) return;
+    this.running = true;
+    this.resize();
+    this._lastTs = performance.now();
+    this._loop(performance.now());
+  }
+
+  stop() {
+    this.running = false;
+    cancelAnimationFrame(this.raf);
+    this.ctx.clearRect(0, 0, this._w, this._h);
+  }
+
+  setMode(m) { this.mode = m; }
+  setSpeed(s) { this.speed = s; }
+  setClickOn(v) { this.clickOn = v; }
+
+  _loop(ts) {
+    if (!this.running) return;
+    this.raf = requestAnimationFrame(t => this._loop(t));
+
+    const dt   = Math.min((ts - this._lastTs) / 1000, 0.05); // secondes, max 50ms
+    this._lastTs = ts;
+
+    const speedFactor = (this.speed / 10) * 0.55 + 0.04; // plage 0.04–0.59
+
+    if (this.mode === 'linear') {
+      this._updateLinear(dt, speedFactor);
     } else {
-      track.gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.0);
-      setTimeout(() => { try { src.stop(); } catch(e) {} }, 1100);
+      this._updateFree(dt, speedFactor);
     }
-    track.source = null;
-    track.active = false;
+
+    this._draw(ts);
   }
 
-  setTrackVolume(id, vol) {
-    const track = this.tracks[id];
-    if (!track) return;
-    track.volume = vol;
-    if (track.active) {
-      track.gainNode.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.1);
+  _updateLinear(dt, sf) {
+    this.x += this.vx * sf * dt;
+    // Bounce sur les bords → clic sonore
+    if (this.x >= 1) {
+      this.x  = 1;
+      this.vx = -1;
+      this._maybeClick();
+    } else if (this.x <= 0) {
+      this.x  = 0;
+      this.vx = 1;
+      this._maybeClick();
+    }
+    // Y fixé au centre en mode linéaire, légère oscillation
+    this.phase += dt * 0.8;
+    this.y = 0.5 + 0.04 * Math.sin(this.phase);
+  }
+
+  _updateFree(dt, sf) {
+    this.x += this.vx * sf * dt;
+    this.y += this.vy * sf * dt;
+    // Friction légère pour mouvement organique
+    this.vx += (Math.random() - 0.5) * 0.15;
+    this.vy += (Math.random() - 0.5) * 0.15;
+    // Normaliser la vitesse
+    const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+    if (speed > 1.4) { this.vx /= speed / 1.4; this.vy /= speed / 1.4; }
+    if (speed < 0.5) { this.vx *= 1.1; this.vy *= 1.1; }
+    // Bounce
+    if (this.x >= 1) { this.x = 1; this.vx *= -1; this._maybeClick(); }
+    if (this.x <= 0) { this.x = 0; this.vx *= -1; this._maybeClick(); }
+    if (this.y >= 1) { this.y = 1; this.vy *= -1; }
+    if (this.y <= 0) { this.y = 0; this.vy *= -1; }
+  }
+
+  _maybeClick() {
+    if (!this.clickOn) return;
+    const now = performance.now();
+    if (now - this.lastClick > 150) { // évite double déclenchement
+      this.lastClick = now;
+      this.engine.playClick();
     }
   }
 
-  setMasterVolume(vol) {
-    this.masterVolume = vol;
-    if (this.masterGain) {
-      this.masterGain.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 0.1);
-    }
-  }
+  _draw(ts) {
+    const w = this._w, h = this._h;
+    const ctx = this.ctx;
+    const px = this.x * w;
+    const py = this.y * h;
 
-  fadeMasterTo(target, durationSec) {
-    if (!this.masterGain) return;
-    this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
-    this.masterGain.gain.linearRampToValueAtTime(target, this.ctx.currentTime + durationSec);
-  }
+    // Fond avec trainée
+    ctx.fillStyle = 'rgba(6,8,15,0.18)';
+    ctx.fillRect(0, 0, w, h);
 
-  stopAll() {
-    for (const id of Object.keys(this.tracks)) {
-      this.stopTrack(id);
-    }
-  }
+    // Halo externe
+    const gOuter = ctx.createRadialGradient(px, py, 0, px, py, 90);
+    gOuter.addColorStop(0, 'rgba(107,164,232,0.09)');
+    gOuter.addColorStop(1, 'transparent');
+    ctx.fillStyle = gOuter;
+    ctx.beginPath();
+    ctx.arc(px, py, 90, 0, Math.PI * 2);
+    ctx.fill();
 
-  getState() {
-    const state = {};
-    for (const [id, t] of Object.entries(this.tracks)) {
-      state[id] = { active: t.active, volume: t.volume };
-    }
-    return state;
-  }
+    // Halo moyen (pulsation)
+    const pulse = 0.75 + 0.25 * Math.sin(ts * 0.003);
+    const gMid  = ctx.createRadialGradient(px, py, 0, px, py, 38 * pulse);
+    gMid.addColorStop(0, 'rgba(107,164,232,0.35)');
+    gMid.addColorStop(0.6, 'rgba(107,164,232,0.1)');
+    gMid.addColorStop(1, 'transparent');
+    ctx.fillStyle = gMid;
+    ctx.beginPath();
+    ctx.arc(px, py, 38 * pulse, 0, Math.PI * 2);
+    ctx.fill();
 
-  loadState(state) {
-    for (const [id, s] of Object.entries(state)) {
-      const track = this.tracks[id];
-      if (!track) continue;
-      if (s.active && !track.active) this.startTrack(id);
-      if (!s.active && track.active) this.stopTrack(id, true);
-      this.setTrackVolume(id, s.volume);
+    // Point central brillant
+    const gCore = ctx.createRadialGradient(px, py, 0, px, py, 10);
+    gCore.addColorStop(0, 'rgba(220,235,255,0.98)');
+    gCore.addColorStop(0.5, 'rgba(107,164,232,0.85)');
+    gCore.addColorStop(1, 'transparent');
+    ctx.fillStyle = gCore;
+    ctx.beginPath();
+    ctx.arc(px, py, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Mode linéaire : guide-rail discret
+    if (this.mode === 'linear') {
+      const cy = py;
+      ctx.strokeStyle = 'rgba(107,164,232,0.06)';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([4, 8]);
+      ctx.beginPath();
+      ctx.moveTo(0, cy);
+      ctx.lineTo(w, cy);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
   }
 }
 
-// ── GLOBAL STATE ───────────────────────────────────────────────
-const mixer = new AudioMixer();
-let audioReady = false;
+// ─────────────────────────────────────────────────────────────────
+// ÉTAT GLOBAL
+// ─────────────────────────────────────────────────────────────────
+const engine  = new AudioEngine();
+let vasmr     = null;
+
+// volumes par track (0–10)
+const volumes = {};
+SOUNDS.forEach(s => volumes[s.id] = 0);
+
+let masterVal = 8; // 0–10
+let dimOn     = false;
+let vasmrOn   = false;
+
+// Timer
 let timerInterval = null;
-let timerSeconds = 0;
-let alarmInterval = null;
-let alarmArmed = false;
-let alarmTime = '';
-let nightMode = false;
-let lightMode = false;
-const cardEls = {};
-const knobStates = {};
+let timerTotal    = 0;
+let timerRemain   = 0;
+let savedMaster   = 8;
 
-// ── PRESETS ────────────────────────────────────────────────────
-function loadPresets() { return JSON.parse(localStorage.getItem('somnia_presets') || '[]'); }
-function savePresets(p) { localStorage.setItem('somnia_presets', JSON.stringify(p)); }
+// ─────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────
+function toAudioVol(v)  { return v / 10; }      // 0–10 → 0.0–1.0
+function toAudioMaster(v) { return v / 10; }
 
-// ── UI HELPERS ─────────────────────────────────────────────────
-function showToast(msg, duration = 2000) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
+function toast(msg, ms = 2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), ms);
 }
 
-// ── ENSURE AUDIO INIT ──────────────────────────────────────────
-async function ensureAudio() {
-  if (audioReady) { await mixer.resume(); return; }
-  await mixer.init();
-  // Pre-generate all track buffers
-  for (const s of SOUNDS) {
-    await mixer.loadTrack(s);
+function loadPresets() { return JSON.parse(localStorage.getItem('somnia_v2_presets') || '[]'); }
+function savePresets(p) { localStorage.setItem('somnia_v2_presets', JSON.stringify(p)); }
+
+// ─────────────────────────────────────────────────────────────────
+// GESTION AUDIO : activer/désactiver selon volume
+// ─────────────────────────────────────────────────────────────────
+async function handleTrackVolume(id, val) {
+  volumes[id] = val;
+  updateSliderStyle(id, val);
+  updateRowActive(id, val);
+
+  if (!engine.ready) await engine.init();
+
+  const avol = toAudioVol(val);
+
+  if (val === 0) {
+    // vol → 0 : éteindre (fade out géré dans stopTrack)
+    engine.stopTrack(id);
+  } else {
+    const t = engine.tracks[id];
+    if (t && t.active) {
+      // Déjà actif : ajuster
+      engine.setTrackVolume(id, avol);
+    } else {
+      // Démarrer
+      await engine.startTrack(id, avol);
+    }
   }
-  audioReady = true;
 }
 
-// ── KNOB LOGIC ─────────────────────────────────────────────────
-function buildKnob(soundId, initialVol, onChange) {
-  const R_OUTER = 26, R_INNER = 18, CX = 28, CY = 28;
-  const START_ANGLE = -225 * Math.PI/180;
-  const RANGE = 270 * Math.PI/180;
-
-  const container = document.createElement('div');
-  container.className = 'knob-container';
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox','0 0 56 56');
-  svg.classList.add('knob-svg');
-
-  const trackCircle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  trackCircle.setAttribute('cx', CX); trackCircle.setAttribute('cy', CY);
-  trackCircle.setAttribute('r', R_OUTER);
-  trackCircle.setAttribute('fill','none');
-  trackCircle.setAttribute('stroke','rgba(255,255,255,0.06)');
-  trackCircle.setAttribute('stroke-width','4');
-  svg.appendChild(trackCircle);
-
-  // arc
-  function polarToXY(angle) {
-    return { x: CX + R_OUTER * Math.cos(angle), y: CY + R_OUTER * Math.sin(angle) };
-  }
-  const arcPath = document.createElementNS('http://www.w3.org/2000/svg','path');
-  arcPath.setAttribute('fill','none');
-  arcPath.setAttribute('stroke-width','4');
-  arcPath.setAttribute('stroke-linecap','round');
-  svg.appendChild(arcPath);
-
-  // dot
-  const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  dot.setAttribute('r','4');
-  dot.setAttribute('fill','white');
-  svg.appendChild(dot);
-
-  container.appendChild(svg);
-
-  const valEl = document.createElement('div');
-  valEl.className = 'knob-value';
-  container.appendChild(valEl);
-
-  let vol = initialVol;
-  knobStates[soundId] = vol;
-
-  function update(v, color) {
-    vol = Math.max(0, Math.min(1, v));
-    knobStates[soundId] = vol;
-    const angle = START_ANGLE + RANGE * vol;
-    const end = polarToXY(angle);
-    const startPt = polarToXY(START_ANGLE);
-    const large = RANGE * vol > Math.PI ? 1 : 0;
-    arcPath.setAttribute('d', vol < 0.01
-      ? `M ${startPt.x} ${startPt.y}`
-      : `M ${startPt.x} ${startPt.y} A ${R_OUTER} ${R_OUTER} 0 ${large} 1 ${end.x} ${end.y}`);
-    arcPath.setAttribute('stroke', color || 'rgba(126,184,247,0.9)');
-    dot.setAttribute('cx', end.x);
-    dot.setAttribute('cy', end.y);
-    dot.setAttribute('fill', color || 'rgba(126,184,247,0.9)');
-    valEl.textContent = Math.round(vol * 100);
-    onChange(vol);
-  }
-
-  // drag
-  let dragging = false, startY = 0, startVol = vol;
-  function onStart(e) {
-    dragging = true;
-    startY = (e.touches ? e.touches[0].clientY : e.clientY);
-    startVol = vol;
-    e.preventDefault();
-  }
-  function onMove(e) {
-    if (!dragging) return;
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-    const delta = -(y - startY) / 120;
-    const color = document.getElementById(soundId+'-card')?.dataset.color;
-    update(startVol + delta, color);
-  }
-  function onEnd() { dragging = false; }
-
-  container.addEventListener('mousedown', onStart);
-  container.addEventListener('touchstart', onStart, { passive: false });
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('touchmove', onMove, { passive: false });
-  window.addEventListener('mouseup', onEnd);
-  window.addEventListener('touchend', onEnd);
-
-  // Init draw
-  setTimeout(() => update(vol, null), 0);
-
-  container.updateColor = (c) => update(vol, c);
-  container.setValue = (v, c) => update(v, c);
-
-  return container;
+function updateSliderStyle(id, val) {
+  const row = document.getElementById(`row-${id}`);
+  const slider = document.getElementById(`slider-${id}`);
+  const valEl  = document.getElementById(`val-${id}`);
+  if (!slider || !valEl) return;
+  const pct = (val / 10) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+  valEl.textContent = val;
 }
 
-// ── BUILD SOUND CARDS ──────────────────────────────────────────
-function buildSoundCards() {
-  const grid = document.getElementById('sounds-grid');
+function updateRowActive(id, val) {
+  const row = document.getElementById(`row-${id}`);
+  if (!row) return;
+  if (val > 0) row.classList.add('active');
+  else         row.classList.remove('active');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CONSTRUCTION DE LA LISTE
+// ─────────────────────────────────────────────────────────────────
+function buildTrackList() {
+  const list = document.getElementById('track-list');
+  list.innerHTML = '';
+
   for (const sound of SOUNDS) {
-    const card = document.createElement('div');
-    card.className = 'sound-card';
-    card.id = sound.id + '-card';
-    card.dataset.color = sound.color;
-    card.style.setProperty('--card-glow', sound.color + '22');
+    const row = document.createElement('div');
+    row.className = 'track-row';
+    row.id = `row-${sound.id}`;
+    row.style.setProperty('--track-color', sound.color);
 
-    card.innerHTML = `
-      <div class="card-top">
-        <span class="sound-icon">${sound.icon}</span>
-        <div class="toggle-pill"></div>
+    row.innerHTML = `
+      <span class="track-icon">${sound.icon}</span>
+      <span class="track-name">${sound.name}</span>
+      <div class="track-slider-wrap">
+        <input
+          type="range"
+          class="track-slider"
+          id="slider-${sound.id}"
+          min="0" max="10" step="1"
+          value="0"
+          style="--track-color:${sound.color}; --pct:0%"
+        />
       </div>
-      <div class="sound-name">${sound.name}</div>
-      <div class="wave-bars">
-        <div class="wave-bar" style="height:6px"></div>
+      <div class="wave">
         <div class="wave-bar"></div>
-        <div class="wave-bar" style="height:8px"></div>
-        <div class="wave-bar" style="height:4px"></div>
-        <div class="wave-bar" style="height:10px"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
       </div>
-      <div class="knob-wrap" id="${sound.id}-knob-wrap"></div>
+      <span class="track-val" id="val-${sound.id}" style="color:${sound.color}">0</span>
     `;
 
-    // Knob
-    const knobEl = buildKnob(sound.id, 0.75, (vol) => {
-      mixer.setTrackVolume(sound.id, vol);
-    });
-    card.querySelector(`#${sound.id}-knob-wrap`).appendChild(knobEl);
-
-    // Toggle
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.knob-container')) return;
-      toggleSound(sound.id, card, knobEl, sound.color);
+    const slider = row.querySelector(`#slider-${sound.id}`);
+    slider.addEventListener('input', async (e) => {
+      const val = parseInt(e.target.value, 10);
+      await handleTrackVolume(sound.id, val);
     });
 
-    cardEls[sound.id] = card;
-    grid.appendChild(card);
+    list.appendChild(row);
   }
 }
 
-async function toggleSound(id, card, knobEl, color) {
-  await ensureAudio();
-  const track = mixer.tracks[id];
-  if (track.active) {
-    mixer.stopTrack(id);
-    card.classList.remove('active');
-    knobEl.updateColor && knobEl.updateColor(null);
-  } else {
-    mixer.startTrack(id);
-    card.classList.add('active');
-    knobEl.updateColor && knobEl.updateColor(color);
-    updateLightColor(color);
-  }
-}
-
-// ── MASTER VOLUME ──────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// MASTER VOLUME
+// ─────────────────────────────────────────────────────────────────
 const masterInput = document.getElementById('master-vol');
-masterInput.addEventListener('input', async () => {
-  await ensureAudio();
-  const val = masterInput.value / 100;
-  mixer.setMasterVolume(val);
-  masterInput.style.setProperty('--pct', masterInput.value + '%');
-});
-masterInput.style.setProperty('--pct', '70%');
+const masterValEl = document.getElementById('master-vol-val');
 
-// ── STOP ALL ───────────────────────────────────────────────────
-document.getElementById('btn-stop').addEventListener('click', async () => {
-  await ensureAudio();
-  mixer.stopAll();
-  for (const id of Object.keys(cardEls)) {
-    cardEls[id].classList.remove('active');
-  }
-  showToast('⏹ Tout arrêté');
+masterInput.addEventListener('input', async (e) => {
+  masterVal = parseInt(e.target.value, 10);
+  masterValEl.textContent = masterVal;
+  masterInput.style.setProperty('--pct', (masterVal / 10 * 100) + '%');
+  if (!engine.ready) await engine.init();
+  engine.setMasterVolume(toAudioMaster(masterVal));
+});
+// Init style
+masterInput.style.setProperty('--pct', '80%');
+
+// ─────────────────────────────────────────────────────────────────
+// STOP ALL
+// ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-stop').addEventListener('click', () => {
+  engine.stopAll();
+  SOUNDS.forEach(s => {
+    volumes[s.id] = 0;
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = 0;
+    updateSliderStyle(s.id, 0);
+    updateRowActive(s.id, 0);
+  });
+  toast('⏹ Tout arrêté');
 });
 
-// ── RANDOM AMBIANCE ────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// RANDOM AMBIANCE
+// ─────────────────────────────────────────────────────────────────
 document.getElementById('btn-random').addEventListener('click', async () => {
-  await ensureAudio();
-  mixer.stopAll();
-  for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
+  engine.stopAll();
+  SOUNDS.forEach(s => {
+    volumes[s.id] = 0;
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = 0;
+    updateSliderStyle(s.id, 0);
+    updateRowActive(s.id, 0);
+  });
 
-  const count = 2 + Math.floor(Math.random() * 3);
-  const shuffled = [...SOUNDS].sort(() => Math.random() - 0.5).slice(0, count);
-  for (const s of shuffled) {
-    mixer.startTrack(s.id);
-    const knobWrap = document.getElementById(s.id + '-knob-wrap');
-    const knob = knobWrap?.querySelector('.knob-container');
-    cardEls[s.id].classList.add('active');
-    if (knob?.updateColor) knob.updateColor(s.color);
+  const shuffled = [...SOUNDS].sort(() => Math.random() - 0.5);
+  const picks    = shuffled.slice(0, 2 + Math.floor(Math.random() * 3));
+
+  for (const s of picks) {
+    const val = 4 + Math.floor(Math.random() * 5); // 4–8
+    const slider = document.getElementById(`slider-${s.id}`);
+    if (slider) slider.value = val;
+    await handleTrackVolume(s.id, val);
   }
-  showToast('🎲 Ambiance aléatoire lancée');
-  updateLightFromActive();
+  toast('🎲 Ambiance aléatoire');
 });
 
-// ── SAVE PRESET ────────────────────────────────────────────────
-document.getElementById('btn-save').addEventListener('click', () => {
+// ─────────────────────────────────────────────────────────────────
+// DIM MODE (luminosité réduite)
+// ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-dim').addEventListener('click', () => {
+  dimOn = !dimOn;
+  document.getElementById('dim-overlay').classList.toggle('active', dimOn);
+  document.getElementById('btn-dim').classList.toggle('active', dimOn);
+});
+
+// Tap sur l'overlay dim → désactiver
+document.getElementById('dim-overlay').addEventListener('click', () => {
+  dimOn = false;
+  document.getElementById('dim-overlay').classList.remove('active');
+  document.getElementById('btn-dim').classList.remove('active');
+});
+
+// ─────────────────────────────────────────────────────────────────
+// PRESETS
+// ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-save-preset').addEventListener('click', () => {
   document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('preset-name-input').focus();
+  setTimeout(() => document.getElementById('preset-name-input').focus(), 100);
 });
 
 document.getElementById('modal-cancel').addEventListener('click', () => {
@@ -1466,282 +1696,246 @@ document.getElementById('modal-cancel').addEventListener('click', () => {
 });
 
 document.getElementById('modal-save').addEventListener('click', () => {
-  const name = document.getElementById('preset-name-input').value.trim() || 'Ambiance sans titre';
-  const state = mixer.getState();
+  const name = document.getElementById('preset-name-input').value.trim() || 'Ambiance';
   const presets = loadPresets();
-  presets.push({ name, state, masterVol: masterInput.value });
+  presets.push({
+    name,
+    volumes: { ...volumes },
+    masterVal,
+    ts: Date.now(),
+  });
   savePresets(presets);
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('preset-name-input').value = '';
   renderPresets();
-  showToast(`💾 "${name}" sauvegardé`);
+  toast(`💾 "${name}" sauvegardé`);
 });
 
-// ── PRESETS ────────────────────────────────────────────────────
+// Fermer modal en cliquant l'overlay
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
 function renderPresets() {
-  const list = document.getElementById('presets-list');
+  const list = document.getElementById('preset-list');
   const presets = loadPresets();
+
   if (presets.length === 0) {
-    list.innerHTML = '<div class="empty-presets">Aucun preset sauvegardé.</div>';
+    list.innerHTML = '<div class="empty-msg">Aucun preset sauvegardé</div>';
     return;
   }
+
   list.innerHTML = '';
-  presets.forEach((p, i) => {
+  presets.forEach((p, idx) => {
     const item = document.createElement('div');
     item.className = 'preset-item';
     item.innerHTML = `
       <span style="font-size:18px">🎵</span>
       <span class="preset-name">${p.name}</span>
-      <button class="preset-del" data-i="${i}" title="Supprimer">✕</button>
+      <button class="preset-del" data-idx="${idx}" title="Supprimer">✕</button>
     `;
+
+    // Charger preset
     item.addEventListener('click', async (e) => {
       if (e.target.closest('.preset-del')) {
-        const idx = parseInt(e.target.closest('.preset-del').dataset.i);
+        const i  = parseInt(e.target.closest('.preset-del').dataset.idx, 10);
         const ps = loadPresets();
-        const removed = ps.splice(idx, 1)[0];
+        const removed = ps.splice(i, 1)[0];
         savePresets(ps);
         renderPresets();
-        showToast(`🗑 "${removed.name}" supprimé`);
+        toast(`🗑 "${removed.name}" supprimé`);
         return;
       }
-      await ensureAudio();
-      mixer.stopAll();
-      for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
-      mixer.loadState(p.state);
-      for (const [id, s] of Object.entries(p.state)) {
-        if (s.active) {
-          cardEls[id]?.classList.add('active');
-          const sound = SOUNDS.find(x => x.id === id);
-          if (sound) {
-            const knobWrap = document.getElementById(id + '-knob-wrap');
-            const knob = knobWrap?.querySelector('.knob-container');
-            if (knob?.updateColor) knob.updateColor(sound.color);
-            if (knob?.setValue) knob.setValue(s.volume, sound.color);
-          }
-        }
+
+      engine.stopAll();
+      if (!engine.ready) await engine.init();
+
+      for (const s of SOUNDS) {
+        const val = p.volumes[s.id] ?? 0;
+        volumes[s.id] = val;
+        const slider = document.getElementById(`slider-${s.id}`);
+        if (slider) slider.value = val;
+        updateSliderStyle(s.id, val);
+        updateRowActive(s.id, val);
+        if (val > 0) await engine.startTrack(s.id, toAudioVol(val));
       }
-      masterInput.value = p.masterVol || 70;
-      masterInput.style.setProperty('--pct', (p.masterVol || 70) + '%');
-      mixer.setMasterVolume((p.masterVol || 70) / 100);
-      showToast(`🎵 "${p.name}" chargé`);
-      // Switch to mix page
+
+      masterVal = p.masterVal ?? 8;
+      masterInput.value = masterVal;
+      masterValEl.textContent = masterVal;
+      masterInput.style.setProperty('--pct', (masterVal / 10 * 100) + '%');
+      engine.setMasterVolume(toAudioMaster(masterVal));
+
       switchPage('mix');
+      toast(`🎵 "${p.name}" chargé`);
     });
+
     list.appendChild(item);
   });
 }
 
-// ── SLEEP TIMER ────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────────────────────────
 document.getElementById('timer-chips').addEventListener('click', async (e) => {
   const chip = e.target.closest('.chip');
   if (!chip) return;
-  await ensureAudio();
+
+  // Si timer déjà en cours avec ce chip → annuler
+  const min = parseInt(chip.dataset.min, 10);
+
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chip.classList.add('active');
+
+  if (!engine.ready) await engine.init();
+
   clearInterval(timerInterval);
-  timerSeconds = parseInt(chip.dataset.min) * 60;
+  savedMaster  = masterVal;
+  timerTotal   = min * 60;
+  timerRemain  = timerTotal;
+
+  document.getElementById('timer-running-row').classList.add('visible');
   updateTimerDisplay();
-  const countdown = document.getElementById('timer-countdown');
-  countdown.classList.add('visible');
-  const originalMaster = mixer.masterVolume;
 
   timerInterval = setInterval(() => {
-    timerSeconds--;
+    timerRemain--;
     updateTimerDisplay();
-    // Progressive fade in last 2 minutes
-    if (timerSeconds <= 120) {
-      const fadePct = timerSeconds / 120;
-      mixer.setMasterVolume(originalMaster * fadePct);
-      masterInput.value = Math.round(originalMaster * fadePct * 100);
-      masterInput.style.setProperty('--pct', masterInput.value + '%');
+
+    // Fade out global sur les 45 dernières secondes
+    const FADE_SEC = 45;
+    if (timerRemain <= FADE_SEC) {
+      const fraction = timerRemain / FADE_SEC;
+      const target   = toAudioMaster(savedMaster) * fraction;
+      engine.setMasterVolume(target);
     }
-    if (timerSeconds <= 0) {
+
+    if (timerRemain <= 0) {
       clearInterval(timerInterval);
       timerInterval = null;
-      mixer.stopAll();
-      for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
-      countdown.classList.remove('visible');
+      engine.stopAll();
+      SOUNDS.forEach(s => {
+        volumes[s.id] = 0;
+        const slider = document.getElementById(`slider-${s.id}`);
+        if (slider) slider.value = 0;
+        updateSliderStyle(s.id, 0);
+        updateRowActive(s.id, 0);
+      });
+      engine.setMasterVolume(toAudioMaster(savedMaster));
+      masterInput.value = savedMaster;
+      masterValEl.textContent = savedMaster;
+      masterInput.style.setProperty('--pct', (savedMaster / 10 * 100) + '%');
+      document.getElementById('timer-running-row').classList.remove('visible');
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      mixer.setMasterVolume(originalMaster);
-      masterInput.value = Math.round(originalMaster * 100);
-      masterInput.style.setProperty('--pct', masterInput.value + '%');
     }
   }, 1000);
 });
 
-document.getElementById('timer-cancel').addEventListener('click', () => {
+function updateTimerDisplay() {
+  const m   = Math.floor(timerRemain / 60);
+  const s   = timerRemain % 60;
+  document.getElementById('timer-countdown').textContent =
+    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const pct = (timerRemain / timerTotal) * 100;
+  document.getElementById('timer-bar-fill').style.width = pct + '%';
+}
+
+document.getElementById('timer-cancel-btn').addEventListener('click', () => {
   clearInterval(timerInterval);
   timerInterval = null;
-  timerSeconds = 0;
-  document.getElementById('timer-countdown').classList.remove('visible');
+  engine.setMasterVolume(toAudioMaster(savedMaster));
+  masterInput.value = savedMaster;
+  masterValEl.textContent = savedMaster;
+  masterInput.style.setProperty('--pct', (savedMaster / 10 * 100) + '%');
+  document.getElementById('timer-running-row').classList.remove('visible');
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  toast('⏹ Minuteur annulé');
 });
 
-function updateTimerDisplay() {
-  const m = Math.floor(timerSeconds / 60);
-  const s = timerSeconds % 60;
-  document.getElementById('timer-countdown').textContent =
-    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
+// ─────────────────────────────────────────────────────────────────
+// VISUAL ASMR
+// ─────────────────────────────────────────────────────────────────
+const vasmrToggle       = document.getElementById('vasmr-toggle');
+const vasmrControls     = document.getElementById('vasmr-controls');
+const vasmrSpeedSlider  = document.getElementById('vasmr-speed');
+const vasmrSpeedVal     = document.getElementById('vasmr-speed-val');
+const vasmrClickToggle  = document.getElementById('vasmr-click-toggle');
+const vasmrOpenBtn      = document.getElementById('vasmr-open-btn');
+const vasmrOverlay      = document.getElementById('vasmr-overlay');
+const vasmrCanvas       = document.getElementById('vasmr-canvas');
+const vasmrCloseBtn     = document.getElementById('vasmr-close-btn');
 
-// ── ALARM ──────────────────────────────────────────────────────
-document.getElementById('alarm-arm-btn').addEventListener('click', async () => {
-  const timeVal = document.getElementById('alarm-time').value;
-  if (!timeVal) return;
-  alarmTime = timeVal;
-  alarmArmed = !alarmArmed;
-  const btn = document.getElementById('alarm-arm-btn');
-  const status = document.getElementById('alarm-status');
-  if (alarmArmed) {
-    btn.classList.add('armed');
-    btn.innerHTML = '<span>🔔</span> Réveil armé';
-    status.textContent = `⏰ Réveil programmé à ${alarmTime} — montée progressive du volume`;
-    startAlarmChecker();
-  } else {
-    btn.classList.remove('armed');
-    btn.innerHTML = '<span>🔔</span> Armer le réveil';
-    status.textContent = '';
-    clearInterval(alarmInterval);
-  }
+let vasmrClickOn = true;
+vasmrClickToggle.classList.add('on');
+
+vasmrToggle.addEventListener('click', () => {
+  vasmrOn = !vasmrOn;
+  vasmrToggle.classList.toggle('on', vasmrOn);
+  vasmrControls.classList.toggle('visible', vasmrOn);
 });
 
-function startAlarmChecker() {
-  clearInterval(alarmInterval);
-  alarmInterval = setInterval(async () => {
-    if (!alarmArmed) return;
-    const now = new Date();
-    const cur = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    if (cur === alarmTime) {
-      alarmArmed = false;
-      clearInterval(alarmInterval);
-      const btn = document.getElementById('alarm-arm-btn');
-      btn.classList.remove('armed');
-      btn.innerHTML = '<span>🔔</span> Armer le réveil';
-      document.getElementById('alarm-status').textContent = '🌅 Réveil en cours...';
-      await ensureAudio();
-      // Wake with birds + gentle sounds
-      mixer.stopAll();
-      for (const id of Object.keys(cardEls)) cardEls[id].classList.remove('active');
-      mixer.setMasterVolume(0);
-      const wakeIds = ['birds','river'];
-      for (const id of wakeIds) {
-        if (mixer.tracks[id]) {
-          mixer.startTrack(id);
-          cardEls[id]?.classList.add('active');
-        }
-      }
-      // Fade in over 3 minutes
-      mixer.fadeMasterTo(0.8, 180);
-      const target = 80;
-      let current = 0;
-      const wakeTimer = setInterval(() => {
-        current = Math.min(target, current + (target / 180));
-        masterInput.value = Math.round(current);
-        masterInput.style.setProperty('--pct', Math.round(current) + '%');
-        if (current >= target) clearInterval(wakeTimer);
-      }, 1000);
-    }
-  }, 10000); // check every 10s
-}
+vasmrSpeedSlider.addEventListener('input', (e) => {
+  const v = parseInt(e.target.value, 10);
+  vasmrSpeedVal.textContent = v;
+  vasmrSpeedSlider.style.setProperty('--pct', (v / 10 * 100) + '%');
+  if (vasmr) vasmr.setSpeed(v);
+});
+vasmrSpeedSlider.style.setProperty('--pct', '40%');
 
-// ── NIGHT MODE ─────────────────────────────────────────────────
-document.getElementById('btn-night').addEventListener('click', () => {
-  nightMode = !nightMode;
-  document.body.classList.toggle('night-mode', nightMode);
-  document.getElementById('btn-night').classList.toggle('active', nightMode);
-  showToast(nightMode ? '🌙 Mode nuit activé' : '☀ Mode normal');
+vasmrClickToggle.addEventListener('click', () => {
+  vasmrClickOn = !vasmrClickOn;
+  vasmrClickToggle.classList.toggle('on', vasmrClickOn);
+  if (vasmr) vasmr.setClickOn(vasmrClickOn);
 });
 
-// ── LIGHT HALO ─────────────────────────────────────────────────
-document.getElementById('btn-light').addEventListener('click', () => {
-  lightMode = !lightMode;
-  document.getElementById('light-halo').classList.toggle('active', lightMode);
-  document.getElementById('btn-light').classList.toggle('active', lightMode);
-  showToast(lightMode ? '💡 Lumière ambiante activée' : '💡 Lumière désactivée');
+// Sélection mode
+document.querySelectorAll('.mode-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = btn.dataset.mode;
+    if (vasmr) vasmr.setMode(mode);
+  });
 });
 
-function updateLightColor(hex) {
-  if (!lightMode) return;
-  // halo is drawn on canvas, just update color var
-  lightColor = hex;
-}
-function updateLightFromActive() {
-  const activeCards = document.querySelectorAll('.sound-card.active');
-  if (activeCards.length > 0) {
-    updateLightColor(activeCards[0].dataset.color);
+vasmrOpenBtn.addEventListener('click', async () => {
+  if (!engine.ready) await engine.init();
+
+  vasmrOverlay.classList.add('visible');
+
+  // Init le moteur VASMR
+  if (!vasmr) {
+    vasmr = new VisualASMR(vasmrCanvas, engine);
   }
-}
-let lightColor = '#7eb8f7';
+  vasmr.setSpeed(parseInt(vasmrSpeedSlider.value, 10));
+  vasmr.setClickOn(vasmrClickOn);
+  const activeMode = document.querySelector('.mode-chip.active')?.dataset.mode || 'linear';
+  vasmr.setMode(activeMode);
 
-// ── AMBIENT CANVAS ─────────────────────────────────────────────
-function initAmbientCanvas() {
-  const canvas = document.getElementById('bg-canvas');
-  const halo = document.getElementById('light-halo');
-  let raf;
+  // Redimensionner après affichage
+  requestAnimationFrame(() => {
+    vasmr.resize();
+    vasmr.start();
+  });
+});
 
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    halo.width = window.innerWidth;
-    halo.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
+vasmrCloseBtn.addEventListener('click', () => {
+  vasmr?.stop();
+  vasmrOverlay.classList.remove('visible');
+});
 
-  // Floating orbs
-  const orbs = Array.from({length: 5}, (_, i) => ({
-    x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
-    r: 80 + Math.random() * 160,
-    vx: (Math.random() - 0.5) * 0.15,
-    vy: (Math.random() - 0.5) * 0.15,
-    hue: 200 + Math.random() * 60,
-    alpha: 0.03 + Math.random() * 0.04,
-  }));
+// Redimensionner VASMR si fenêtre change taille
+window.addEventListener('resize', () => {
+  if (vasmr && vasmr.running) vasmr.resize();
+});
 
-  function draw(ts) {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (const o of orbs) {
-      o.x += o.vx; o.y += o.vy;
-      if (o.x < -o.r) o.x = canvas.width + o.r;
-      if (o.x > canvas.width + o.r) o.x = -o.r;
-      if (o.y < -o.r) o.y = canvas.height + o.r;
-      if (o.y > canvas.height + o.r) o.y = -o.r;
-      const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-      g.addColorStop(0, `hsla(${o.hue},80%,65%,${o.alpha})`);
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    // Light halo
-    const hctx = halo.getContext('2d');
-    hctx.clearRect(0, 0, halo.width, halo.height);
-    if (halo.classList.contains('active')) {
-      const cx = halo.width / 2, cy = halo.height * 0.3;
-      const pulse = 0.5 + 0.5 * Math.sin(ts * 0.001);
-      const r = 200 + pulse * 60;
-      const hg = hctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      const hex = lightColor || '#7eb8f7';
-      hg.addColorStop(0, hex + '22');
-      hg.addColorStop(0.5, hex + '08');
-      hg.addColorStop(1, 'transparent');
-      hctx.fillStyle = hg;
-      hctx.fillRect(0, 0, halo.width, halo.height);
-    }
-
-    raf = requestAnimationFrame(draw);
-  }
-  draw(0);
-}
-
-// ── NAVIGATION ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────────
 function switchPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  document.getElementById('nav-' + id).classList.add('active');
+  document.getElementById(`page-${id}`).classList.add('active');
+  document.getElementById(`nav-${id}`).classList.add('active');
   if (id === 'presets') renderPresets();
 }
 
@@ -1749,14 +1943,67 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => switchPage(btn.dataset.page));
 });
 
-// ── INIT ───────────────────────────────────────────────────────
-buildSoundCards();
-initAmbientCanvas();
-renderPresets();
+// ─────────────────────────────────────────────────────────────────
+// AMBIENT CANVAS (orbes flottantes en fond)
+// ─────────────────────────────────────────────────────────────────
+function initAmbient() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
 
-// NOTE: Web Audio API requires user gesture before audio can start.
-// The first tap on any sound card will initialize the AudioContext.
-// This is a browser security restriction on all mobile platforms.
+  const orbs = Array.from({ length: 4 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: 0.15 + Math.random() * 0.2,
+    vx: (Math.random() - 0.5) * 0.0002,
+    vy: (Math.random() - 0.5) * 0.0002,
+    hue: 200 + Math.random() * 60,
+    alpha: 0.025 + Math.random() * 0.025,
+  }));
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const o of orbs) {
+      o.x += o.vx; o.y += o.vy;
+      if (o.x < 0) o.x = 1; if (o.x > 1) o.x = 0;
+      if (o.y < 0) o.y = 1; if (o.y > 1) o.y = 0;
+      const cx = o.x * canvas.width;
+      const cy = o.y * canvas.height;
+      const r  = o.r * Math.min(canvas.width, canvas.height);
+      const g  = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, `hsla(${o.hue},70%,65%,${o.alpha})`);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SERVICE WORKER
+// ─────────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(console.warn);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
+buildTrackList();
+initAmbient();
+renderPresets();
 </script>
 </body>
 </html>
