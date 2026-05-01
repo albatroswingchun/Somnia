@@ -1550,6 +1550,23 @@ function openStartupFlow() {
   }
 }
 
+function closeStartupModals() {
+  document.getElementById('name-modal-overlay').classList.remove('open');
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('entry-timer-modal-overlay').classList.remove('open');
+}
+
+function openStartupFlow() {
+  closeStartupModals();
+  isFirstLaunch = !localStorage.getItem('somnia_v2_name_initialized');
+  if (isFirstLaunch) {
+    document.getElementById('name-modal-overlay').classList.add('open');
+  } else {
+    renderProfilePicker();
+    document.getElementById('profile-modal-overlay').classList.add('open');
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────
 // GESTION AUDIO : activer/désactiver selon volume
 // ─────────────────────────────────────────────────────────────────
