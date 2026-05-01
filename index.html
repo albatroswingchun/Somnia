@@ -281,6 +281,7 @@ html, body {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .chip {
@@ -722,16 +723,14 @@ html, body {
   margin-bottom: 10px;
 }
 
-.touch-gutter {
-  position: fixed; top: 0; right: 0;
-  width: 28px; height: 100dvh;
-  background: #000;
-  z-index: 120;
-  touch-action: pan-y;
-}
-
-@media (max-width: 768px) {
-  .app { max-width: calc(100vw - 28px); margin-right: 28px; }
+#btn-stop{
+  min-width: 52px;
+  height: 40px;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── SCROLLBAR ───────────────────────────────────── */
@@ -744,7 +743,6 @@ html, body {
 
 <!-- Ambient background -->
 <canvas id="bg-canvas"></canvas>
-<div class="touch-gutter" aria-hidden="true"></div>
 
 <!-- Dim overlay (bouton lune) -->
 <div id="dim-overlay"></div>
@@ -789,6 +787,7 @@ html, body {
       <button class="chip" data-min="30">30 min</button>
       <button class="chip" data-min="45">45 min</button>
       <button class="chip" data-min="60">1 h</button>
+      <button class="chip" data-min="skip">Je ne sais pas</button>
     </div>
   </div>
 </div>
@@ -860,6 +859,7 @@ html, body {
         <button class="chip" data-min="30">30 min</button>
         <button class="chip" data-min="45">45 min</button>
         <button class="chip" data-min="60">1 h</button>
+        <button class="chip" data-min="skip">Je ne sais pas</button>
       </div>
       <div class="timer-running-row" id="timer-running-row">
         <div class="timer-countdown" id="timer-countdown">--:--</div>
@@ -1550,23 +1550,6 @@ function openStartupFlow() {
   }
 }
 
-function closeStartupModals() {
-  document.getElementById('name-modal-overlay').classList.remove('open');
-  document.getElementById('profile-modal-overlay').classList.remove('open');
-  document.getElementById('entry-timer-modal-overlay').classList.remove('open');
-}
-
-function openStartupFlow() {
-  closeStartupModals();
-  isFirstLaunch = !localStorage.getItem('somnia_v2_name_initialized');
-  if (isFirstLaunch) {
-    document.getElementById('name-modal-overlay').classList.add('open');
-  } else {
-    renderProfilePicker();
-    document.getElementById('profile-modal-overlay').classList.add('open');
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────
 // GESTION AUDIO : activer/désactiver selon volume
 // ─────────────────────────────────────────────────────────────────
@@ -1856,11 +1839,28 @@ function startTimer(min, sourceChip) {
 document.getElementById('timer-chips').addEventListener('click', (e) => {
   const chip = e.target.closest('.chip');
   if (!chip) return;
+  if (chip.dataset.min === 'skip') {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    document.getElementById('timer-running-row').classList.remove('visible');
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    toast('Minuteur non défini');
+    persistCurrentMix();
+    return;
+  }
   startTimer(parseInt(chip.dataset.min, 10), chip);
 });
 document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
   const chip = e.target.closest('.chip');
   if (!chip) return;
+  if (chip.dataset.min === 'skip') {
+    document.getElementById('entry-timer-modal-overlay').classList.remove('open');
+    document.getElementById('profile-modal-overlay').classList.remove('open');
+    document.getElementById('name-modal-overlay').classList.remove('open');
+    toast('Tu pourras lancer le minuteur plus tard');
+    persistCurrentMix();
+    return;
+  }
   startTimer(parseInt(chip.dataset.min, 10), chip);
   document.getElementById('entry-timer-modal-overlay').classList.remove('open');
   document.getElementById('profile-modal-overlay').classList.remove('open');
