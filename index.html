@@ -759,14 +759,22 @@ html, body {
 <div class="toast" id="toast"></div>
 
 <!-- Profile picker modal -->
-<div class="modal-overlay open top" id="profile-modal-overlay">
+<div class="modal-overlay top" id="profile-modal-overlay">
   <div class="modal" style="position:relative">
     <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
     <h3 class="entry-title">Bienvenue sur Somnia</h3>
-    <p class="entry-desc">Somnia te permet de créer une ambiance sonore immersive et personnalisée pour apaiser ton esprit et t’endormir naturellement. Ajuste chaque son, laisse-toi glisser naturellement vers le sommeil. Une expérience ASMR immersive pensée pour apaiser ton esprit.</p>
+    <p class="entry-desc">Sélectionne une sauvegarde locale pour reprendre facilement ta session.</p>
     <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
+    <button class="btn-primary entry-enter-btn" id="profile-load-btn">Charger la sélection</button>
+  </div>
+</div>
+
+<div class="modal-overlay top" id="name-modal-overlay">
+  <div class="modal">
+    <h3 class="entry-title">Bienvenue sur Somnia</h3>
+    <p class="entry-desc">Renseigne ton nom une seule fois pour créer ton profil local.</p>
     <input class="modal-input" id="profile-name-input" type="text" placeholder="Inscris ton nom ici..." maxlength="40"/>
-    <button class="btn-primary entry-enter-btn" id="profile-create-btn">Plonge dans le sommeil...</button>
+    <button class="btn-primary entry-enter-btn" id="profile-create-btn">Continuer</button>
   </div>
 </div>
 
@@ -1463,6 +1471,7 @@ let dimOn     = false;
 let vasmrOn   = false;
 let currentProfileId = null;
 let pendingProfileId = null;
+let isFirstLaunch = false;
 
 // Timer
 let timerInterval = null;
@@ -1486,6 +1495,23 @@ function loadPresets() { return JSON.parse(localStorage.getItem('somnia_v2_prese
 function savePresets(p) { localStorage.setItem('somnia_v2_presets', JSON.stringify(p)); }
 function loadProfiles() { return JSON.parse(localStorage.getItem('somnia_v2_profiles') || '[]'); }
 function saveProfiles(p) { localStorage.setItem('somnia_v2_profiles', JSON.stringify(p)); }
+
+function closeStartupModals() {
+  document.getElementById('name-modal-overlay').classList.remove('open');
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('entry-timer-modal-overlay').classList.remove('open');
+}
+
+function openStartupFlow() {
+  closeStartupModals();
+  isFirstLaunch = !localStorage.getItem('somnia_v2_name_initialized');
+  if (isFirstLaunch) {
+    document.getElementById('name-modal-overlay').classList.add('open');
+  } else {
+    renderProfilePicker();
+    document.getElementById('profile-modal-overlay').classList.add('open');
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────
 // GESTION AUDIO : activer/désactiver selon volume
@@ -1760,6 +1786,7 @@ document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
   startTimer(parseInt(chip.dataset.min, 10), chip);
   document.getElementById('entry-timer-modal-overlay').classList.remove('open');
   document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('name-modal-overlay').classList.remove('open');
 });
 
 function updateTimerDisplay() {
@@ -1843,29 +1870,36 @@ function renderProfilePicker() {
 
 document.getElementById('profile-skip-btn').addEventListener('click', () => {
   currentProfileId = null;
+  pendingProfileId = null;
   resetAllTracks();
   document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('entry-timer-modal-overlay').classList.add('open');
+});
+
+document.getElementById('profile-load-btn').addEventListener('click', async () => {
+  if (pendingProfileId) {
+    await loadProfileState(pendingProfileId);
+    toast('👤 Profil chargé');
+  } else {
+    toast('Choisis une sauvegarde à charger');
+  }
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('entry-timer-modal-overlay').classList.add('open');
 });
 
 document.getElementById('profile-create-btn').addEventListener('click', () => {
   const name = document.getElementById('profile-name-input').value.trim();
-  if (name) {
-    const profiles = loadProfiles();
-    const id = `p_${Date.now()}`;
-    profiles.push({ id, name, volumes: {}, updatedAt: Date.now() });
-    saveProfiles(profiles);
-    currentProfileId = id;
-    pendingProfileId = id;
-    toast(`👤 "${name}" créé`);
-  } else if (pendingProfileId) {
-    loadProfileState(pendingProfileId);
-    toast('👤 Profil chargé');
-  } else {
-    currentProfileId = null;
-    resetAllTracks();
-    toast('Bienvenue dans Somnia');
-  }
+  if (!name) return;
+  const profiles = loadProfiles();
+  const id = `p_${Date.now()}`;
+  profiles.push({ id, name, volumes: {}, updatedAt: Date.now() });
+  saveProfiles(profiles);
+  localStorage.setItem('somnia_v2_name_initialized', '1');
+  currentProfileId = id;
+  pendingProfileId = id;
+  toast(`👤 "${name}" créé`);
   document.getElementById('profile-name-input').value = '';
+  document.getElementById('name-modal-overlay').classList.remove('open');
   document.getElementById('entry-timer-modal-overlay').classList.add('open');
 });
 
@@ -2058,7 +2092,12 @@ if ('serviceWorker' in navigator) {
 // INIT
 // ─────────────────────────────────────────────────────────────────
 (async function initApp() {
-  await loadSharedAudioLibrary();
+  openStartupFlow();
+  try {
+    await loadSharedAudioLibrary();
+  } catch (e) {
+    console.warn('Audio library load failed:', e);
+  }
   buildTrackList();
   initAmbient();
   renderPresets();
