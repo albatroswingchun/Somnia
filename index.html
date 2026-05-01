@@ -762,8 +762,8 @@ html, body {
 <div class="modal-overlay top" id="profile-modal-overlay">
   <div class="modal" style="position:relative">
     <button class="preset-del" id="profile-skip-btn" title="Passer" style="position:absolute; top:10px; right:10px;">✕</button>
-    <h3 class="entry-title">Choisis une sauvegarde</h3>
-    <p class="entry-desc">Retrouve rapidement une session locale enregistrée manuellement.</p>
+    <h3 class="entry-title">Bienvenue sur Somnia</h3>
+    <p class="entry-desc">Sélectionne une sauvegarde locale pour reprendre facilement ta session.</p>
     <div id="profile-list" class="preset-list" style="margin-bottom:10px;"></div>
     <button class="btn-primary entry-enter-btn" id="profile-load-btn">Charger la sélection</button>
   </div>
@@ -1496,6 +1496,23 @@ function savePresets(p) { localStorage.setItem('somnia_v2_presets', JSON.stringi
 function loadProfiles() { return JSON.parse(localStorage.getItem('somnia_v2_profiles') || '[]'); }
 function saveProfiles(p) { localStorage.setItem('somnia_v2_profiles', JSON.stringify(p)); }
 
+function closeStartupModals() {
+  document.getElementById('name-modal-overlay').classList.remove('open');
+  document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('entry-timer-modal-overlay').classList.remove('open');
+}
+
+function openStartupFlow() {
+  closeStartupModals();
+  isFirstLaunch = !localStorage.getItem('somnia_v2_name_initialized');
+  if (isFirstLaunch) {
+    document.getElementById('name-modal-overlay').classList.add('open');
+  } else {
+    renderProfilePicker();
+    document.getElementById('profile-modal-overlay').classList.add('open');
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────
 // GESTION AUDIO : activer/désactiver selon volume
 // ─────────────────────────────────────────────────────────────────
@@ -1769,6 +1786,7 @@ document.getElementById('entry-timer-chips').addEventListener('click', (e) => {
   startTimer(parseInt(chip.dataset.min, 10), chip);
   document.getElementById('entry-timer-modal-overlay').classList.remove('open');
   document.getElementById('profile-modal-overlay').classList.remove('open');
+  document.getElementById('name-modal-overlay').classList.remove('open');
 });
 
 function updateTimerDisplay() {
@@ -2074,7 +2092,12 @@ if ('serviceWorker' in navigator) {
 // INIT
 // ─────────────────────────────────────────────────────────────────
 (async function initApp() {
-  await loadSharedAudioLibrary();
+  openStartupFlow();
+  try {
+    await loadSharedAudioLibrary();
+  } catch (e) {
+    console.warn('Audio library load failed:', e);
+  }
   buildTrackList();
   initAmbient();
   renderPresets();
