@@ -807,14 +807,18 @@ html, body {
 <!-- Settings modal -->
 <div class="modal-overlay" id="settings-modal-overlay">
   <div class="modal">
-    <h3>Réglage profil</h3>
-    <input class="modal-input" id="settings-rename-input" type="text" placeholder="Renommer le profil…" maxlength="40"/>
+    <h3>Profil</h3>
+    <input class="modal-input" id="profile-edit-input" type="text" placeholder="Modifier ton prénom" maxlength="40"/>
     <div class="modal-actions" style="margin-bottom:8px;">
-      <button class="btn-primary" id="settings-rename-btn">Renommer</button>
+      <button class="btn-primary" id="profile-save-btn">Enregistrer</button>
       <button class="btn-ghost" id="settings-reset-btn">Tout à zéro</button>
     </div>
     <div class="modal-actions">
-      <button class="btn-ghost danger" id="settings-delete-btn">Effacer sauvegarde profil</button>
+      <button class="btn-ghost danger" id="profile-reset-onboarding-btn">Réinitialiser l’onboarding</button>
+      <button class="btn-ghost danger" id="profile-clear-presets-btn">Supprimer mes ambiances</button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-ghost danger" id="profile-reset-all-btn">Réinitialiser Somnia</button>
       <button class="btn-ghost" id="settings-close-btn">Fermer</button>
     </div>
   </div>
@@ -922,22 +926,9 @@ html, body {
     <div id="preset-list" class="preset-list"></div>
   </div>
 
-  <div class="page" id="page-profile" style="padding:16px 20px 80px;">
-    <input class="modal-input" id="profile-edit-input" type="text" placeholder="Modifier ton prénom" maxlength="40"/>
-    <div class="modal-actions" style="margin-top:8px;">
-      <button class="btn-primary" id="profile-save-btn">Enregistrer</button>
-      <button class="btn-ghost danger" id="profile-reset-onboarding-btn">Réinitialiser l’onboarding</button>
-    </div>
-    <div class="modal-actions" style="margin-top:8px;">
-      <button class="btn-ghost danger" id="profile-clear-presets-btn">Supprimer mes ambiances</button>
-      <button class="btn-ghost danger" id="profile-reset-all-btn">Réinitialiser Somnia</button>
-    </div>
-  </div>
-
   <div class="bottom-nav">
     <button class="nav-btn active" data-page="mix">Somnia</button>
     <button class="nav-btn" data-page="ambiances">Ambiances</button>
-    <button class="nav-btn" data-page="profile">Profil</button>
   </div>
 
 </div><!-- end .app -->
@@ -2024,27 +2015,6 @@ document.getElementById('settings-reset-btn').addEventListener('click', () => {
   resetAllTracks();
   persistCurrentProfileState();
   toast('↺ Tout remis à zéro');
-});
-document.getElementById('settings-rename-btn').addEventListener('click', () => {
-  if (!currentProfileId) return toast('Aucun profil actif');
-  const newName = document.getElementById('settings-rename-input').value.trim();
-  if (!newName) return;
-  const profiles = loadProfiles();
-  const i = profiles.findIndex(p => p.id === currentProfileId);
-  if (i < 0) return;
-  profiles[i].name = newName;
-  saveProfiles(profiles);
-  renderProfilePicker();
-  toast('✏️ Profil renommé');
-});
-document.getElementById('settings-delete-btn').addEventListener('click', () => {
-  if (!currentProfileId) return toast('Aucun profil actif');
-  const profiles = loadProfiles().filter(p => p.id !== currentProfileId);
-  saveProfiles(profiles);
-  currentProfileId = null;
-  resetAllTracks();
-  renderProfilePicker();
-  toast('🗑 Sauvegarde profil effacée');
 });
 
 // ─────────────────────────────────────────────────────────────────
