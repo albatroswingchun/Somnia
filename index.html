@@ -947,20 +947,7 @@ html, body {
 // Ex: file: 'assets/audio/rain.m4a'
 // Si "file" est absent ou que le chargement échoue → générateur.
 // ─────────────────────────────────────────────────────────────────
-const SOUNDS = [
-  { id:'rain',    name:'Pluie douce',      icon:'🌧',  color:'#6ba4e8', file:'assets/audio/rain.m4a',    gen:'rain'    },
-  { id:'thunder', name:'Orage lointain',   icon:'⛈',   color:'#9b7fe8', file:'assets/audio/thunder.m4a', gen:'thunder' },
-  { id:'wind',    name:'Vent',             icon:'🌬',   color:'#5fbfa0', file:'assets/audio/wind.m4a',    gen:'wind'    },
-  { id:'forest',  name:'Forêt',            icon:'🌲',   color:'#4ade80', file:'assets/audio/forest.m4a',  gen:'forest'  },
-  { id:'birds',   name:'Oiseaux',          icon:'🐦',   color:'#fbbf24', file:'assets/audio/birds.m4a',   gen:'birds'   },
-  { id:'river',   name:'Rivière',          icon:'💧',   color:'#38bdf8', file:'assets/audio/river.m4a',   gen:'river'   },
-  { id:'fire',    name:'Feu de cheminée',  icon:'🔥',   color:'#fb923c', file:'assets/audio/fire.m4a',    gen:'fire'    },
-  { id:'white',   name:'Bruit blanc',      icon:'📻',   color:'#94a3b8', file:'assets/audio/white.m4a',   gen:'white'   },
-  { id:'taps',    name:'Taps ASMR',        icon:'✋',   color:'#f9a8d4', file:'assets/audio/taps.m4a',    gen:'taps'    },
-  { id:'bowl',    name:'Bols tibétains',   icon:'🔔',   color:'#fde68a', file:'assets/audio/bowl.m4a',    gen:'bowl'    },
-  { id:'breath',  name:'Respiration',      icon:'🫁',   color:'#c4b5fd', file:'assets/audio/breath.m4a',  gen:'breath'  },
-  { id:'texture', name:'Texture',          icon:'🧶',   color:'#fdba74', file:'assets/audio/texture.m4a', gen:'texture' },
-];
+let SOUNDS = [];
 
 
 async function loadSharedAudioLibrary() {
@@ -969,11 +956,18 @@ async function loadSharedAudioLibrary() {
     if (!res.ok) return;
     const db = await res.json();
     if (!db || !Array.isArray(db.tracks)) return;
-    const map = new Map(db.tracks.filter(t => t && t.id && t.file).map(t => [t.id, t.file]));
-    SOUNDS.forEach(sound => {
-      const sharedFile = map.get(sound.id);
-      if (sharedFile) sound.file = sharedFile;
-    });
+    const palette = ['#6ba4e8','#9b7fe8','#5fbfa0','#4ade80','#fbbf24','#38bdf8','#fb923c','#94a3b8','#f9a8d4','#fde68a','#c4b5fd','#fdba74'];
+    const icons = ['🎵','🌙','💤','🌧','🌬','🌲','💧','🔥','🔔','✨','🎧','🫧'];
+    SOUNDS = db.tracks
+      .filter(t => t && t.id && t.file)
+      .map((t, i) => ({
+        id: String(t.id).trim().toLowerCase(),
+        name: String(t.id).trim().replace(/[_-]+/g, ' '),
+        icon: icons[i % icons.length],
+        color: palette[i % palette.length],
+        file: String(t.file).trim().replace(/\.xmp$/i, ''),
+        gen: null
+      }));
   } catch (_) {}
 }
 // ─────────────────────────────────────────────────────────────────
@@ -1021,8 +1015,12 @@ class AudioEngine {
       }
     }
 
-    // Fallback : génération procédurale
-    this.buffers[sound.id] = this._generate(sound.gen);
+    // Fallback : génération procédurale (si disponible), sinon silence
+    if (sound.gen) this.buffers[sound.id] = this._generate(sound.gen);
+    else {
+      const silent = this.ctx.createBuffer(1, this.ctx.sampleRate * 2, this.ctx.sampleRate);
+      this.buffers[sound.id] = silent;
+    }
   }
 
   // ── Démarrage d'une piste avec fade in ──────────────────────
@@ -1483,7 +1481,6 @@ let vasmr     = null;
 
 // volumes par track (0–10)
 const volumes = {};
-SOUNDS.forEach(s => volumes[s.id] = 0);
 
 let dimOn     = false;
 let vasmrOn   = false;
@@ -1619,8 +1616,13 @@ function updateGreeting() {
 function buildTrackList() {
   const list = document.getElementById('track-list');
   list.innerHTML = '';
+  if (!SOUNDS.length) {
+    list.innerHTML = '<div class="empty-msg" style="padding:20px;">Aucune piste audio trouvée dans assets/audio/library.json</div>';
+    return;
+  }
 
   for (const sound of SOUNDS) {
+    if (typeof volumes[sound.id] !== 'number') volumes[sound.id] = 0;
     const row = document.createElement('div');
     row.className = 'track-row';
     row.id = `row-${sound.id}`;
