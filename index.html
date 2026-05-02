@@ -947,51 +947,47 @@ html, body {
 // Ex: file: 'assets/audio/rain.m4a'
 // Si "file" est absent ou que le chargement échoue → générateur.
 // ─────────────────────────────────────────────────────────────────
-const SOUNDS = [
-  { id:'rain',    name:'Pluie douce',      icon:'🌧',  color:'#6ba4e8', file:'assets/audio/rain.m4a',    gen:'rain'    },
-  { id:'thunder', name:'Orage lointain',   icon:'⛈',   color:'#9b7fe8', file:'assets/audio/thunder.m4a', gen:'thunder' },
-  { id:'wind',    name:'Vent',             icon:'🌬',   color:'#5fbfa0', file:'assets/audio/wind.m4a',    gen:'wind'    },
-  { id:'forest',  name:'Forêt',            icon:'🌲',   color:'#4ade80', file:'assets/audio/forest.m4a',  gen:'forest'  },
-  { id:'birds',   name:'Oiseaux',          icon:'🐦',   color:'#fbbf24', file:'assets/audio/birds.m4a',   gen:'birds'   },
-  { id:'river',   name:'Rivière',          icon:'💧',   color:'#38bdf8', file:'assets/audio/river.m4a',   gen:'river'   },
-  { id:'fire',    name:'Feu de cheminée',  icon:'🔥',   color:'#fb923c', file:'assets/audio/fire.m4a',    gen:'fire'    },
-  { id:'white',   name:'Bruit blanc',      icon:'📻',   color:'#94a3b8', file:'assets/audio/white.m4a',   gen:'white'   },
-  { id:'taps',    name:'Taps ASMR',        icon:'✋',   color:'#f9a8d4', file:'assets/audio/taps.m4a',    gen:'taps'    },
-  { id:'bowl',    name:'Bols tibétains',   icon:'🔔',   color:'#fde68a', file:'assets/audio/bowl.m4a',    gen:'bowl'    },
-  { id:'breath',  name:'Respiration',      icon:'🫁',   color:'#c4b5fd', file:'assets/audio/breath.m4a',  gen:'breath'  },
-  { id:'texture', name:'Texture',          icon:'🧶',   color:'#fdba74', file:'assets/audio/texture.m4a', gen:'texture' },
-];
+let SOUNDS = [];
 
-const TRACK_ID_ALIASES = {
-  fireplace: 'fire',
-  asmr_pure_hand: 'taps',
-  texture: 'texture',
-};
+const TRACK_COLORS = ['#6ba4e8','#9b7fe8','#5fbfa0','#4ade80','#fbbf24','#38bdf8','#fb923c','#94a3b8','#f9a8d4','#fde68a','#c4b5fd','#fdba74'];
+const TRACK_ICONS = ['🎧','🌙','✨','💤','🎵','🔊','🫧','🌌','🕯️','🍃','🌊','🪷'];
 
 function normalizeTrackKey(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-async function loadSharedAudioLibrary() {
-  try {
-    const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
-    if (!res.ok) return;
-    const db = await res.json();
-    if (!db || !Array.isArray(db.tracks)) return;
-    const byId = new Map();
-    for (const track of db.tracks) {
-      if (!track || !track.id || !track.file) continue;
-      const rawKey = normalizeTrackKey(track.id);
-      const key = TRACK_ID_ALIASES[rawKey] || rawKey;
-      byId.set(key, track.file);
-    }
+function fileNameFromPath(path) {
+  const parts = String(path || '').split('/');
+  return parts[parts.length - 1] || '';
+}
 
-    SOUNDS.forEach(sound => {
-      const key = normalizeTrackKey(sound.id);
-      const sharedFile = byId.get(key);
-      if (sharedFile) sound.file = sharedFile;
+function stripAudioExt(name) {
+  return String(name || '').replace(/\.[a-z0-9]+$/i, '');
+}
+
+async function loadSharedAudioLibrary() {
+  const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
+  const db = await res.json();
+  if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
+
+  SOUNDS = db.tracks
+    .filter(track => track && track.file)
+    .map((track, index) => {
+      const fileName = fileNameFromPath(track.file);
+      const baseName = stripAudioExt(fileName);
+      const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
+      return {
+        id: safeId,
+        name: baseName,
+        icon: TRACK_ICONS[index % TRACK_ICONS.length],
+        color: TRACK_COLORS[index % TRACK_COLORS.length],
+        file: track.file,
+        gen: null,
+      };
     });
-  } catch (_) {}
+
+  if (!SOUNDS.length) throw new Error('Aucune piste audio trouvée dans library.json');
 }
 // ─────────────────────────────────────────────────────────────────
 // MOTEUR AUDIO
@@ -1038,8 +1034,12 @@ class AudioEngine {
       }
     }
 
-    // Fallback : génération procédurale
-    this.buffers[sound.id] = this._generate(sound.gen);
+    if (sound.gen) {
+      this.buffers[sound.id] = this._generate(sound.gen);
+      return;
+    }
+
+    throw new Error(`[Somnia] Aucun fichier lisible pour la piste ${sound.id}`);
   }
 
   // ── Démarrage d'une piste avec fade in ──────────────────────
@@ -1623,7 +1623,17 @@ async function handleTrackVolume(id, val) {
       engine.setTrackVolume(id, avol);
     } else {
       // Démarrer
-      await engine.startTrack(id, avol);
+      try {
+        await engine.startTrack(id, avol);
+      } catch (e) {
+        console.warn(e);
+        volumes[id] = 0;
+        const slider = document.getElementById(`slider-${id}`);
+        if (slider) slider.value = 0;
+        updateSliderStyle(id, 0);
+        updateRowActive(id, 0);
+        toast('⚠️ Fichier audio introuvable pour cette piste');
+      }
     }
   }
   persistCurrentProfileState();
