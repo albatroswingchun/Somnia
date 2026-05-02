@@ -947,34 +947,47 @@ html, body {
 // Ex: file: 'assets/audio/rain.m4a'
 // Si "file" est absent ou que le chargement échoue → générateur.
 // ─────────────────────────────────────────────────────────────────
-const SOUNDS = [
-  { id:'rain',    name:'Pluie douce',      icon:'🌧',  color:'#6ba4e8', file:'assets/audio/rain.m4a',    gen:'rain'    },
-  { id:'thunder', name:'Orage lointain',   icon:'⛈',   color:'#9b7fe8', file:'assets/audio/thunder.m4a', gen:'thunder' },
-  { id:'wind',    name:'Vent',             icon:'🌬',   color:'#5fbfa0', file:'assets/audio/wind.m4a',    gen:'wind'    },
-  { id:'forest',  name:'Forêt',            icon:'🌲',   color:'#4ade80', file:'assets/audio/forest.m4a',  gen:'forest'  },
-  { id:'birds',   name:'Oiseaux',          icon:'🐦',   color:'#fbbf24', file:'assets/audio/birds.m4a',   gen:'birds'   },
-  { id:'river',   name:'Rivière',          icon:'💧',   color:'#38bdf8', file:'assets/audio/river.m4a',   gen:'river'   },
-  { id:'fire',    name:'Feu de cheminée',  icon:'🔥',   color:'#fb923c', file:'assets/audio/fire.m4a',    gen:'fire'    },
-  { id:'white',   name:'Bruit blanc',      icon:'📻',   color:'#94a3b8', file:'assets/audio/white.m4a',   gen:'white'   },
-  { id:'taps',    name:'Taps ASMR',        icon:'✋',   color:'#f9a8d4', file:'assets/audio/taps.m4a',    gen:'taps'    },
-  { id:'bowl',    name:'Bols tibétains',   icon:'🔔',   color:'#fde68a', file:'assets/audio/bowl.m4a',    gen:'bowl'    },
-  { id:'breath',  name:'Respiration',      icon:'🫁',   color:'#c4b5fd', file:'assets/audio/breath.m4a',  gen:'breath'  },
-  { id:'texture', name:'Texture',          icon:'🧶',   color:'#fdba74', file:'assets/audio/texture.m4a', gen:'texture' },
-];
+let SOUNDS = [];
 
+const TRACK_COLORS = ['#6ba4e8','#9b7fe8','#5fbfa0','#4ade80','#fbbf24','#38bdf8','#fb923c','#94a3b8','#f9a8d4','#fde68a','#c4b5fd','#fdba74'];
+const TRACK_ICONS = ['🎧','🌙','✨','💤','🎵','🔊','🫧','🌌','🕯️','🍃','🌊','🪷'];
+
+function normalizeTrackKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function fileNameFromPath(path) {
+  const parts = String(path || '').split('/');
+  return parts[parts.length - 1] || '';
+}
+
+function stripAudioExt(name) {
+  return String(name || '').replace(/\.[a-z0-9]+$/i, '');
+}
 
 async function loadSharedAudioLibrary() {
-  try {
-    const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
-    if (!res.ok) return;
-    const db = await res.json();
-    if (!db || !Array.isArray(db.tracks)) return;
-    const map = new Map(db.tracks.filter(t => t && t.id && t.file).map(t => [t.id, t.file]));
-    SOUNDS.forEach(sound => {
-      const sharedFile = map.get(sound.id);
-      if (sharedFile) sound.file = sharedFile;
+  const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
+  const db = await res.json();
+  if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
+
+  SOUNDS = db.tracks
+    .filter(track => track && track.file)
+    .map((track, index) => {
+      const fileName = fileNameFromPath(track.file);
+      const baseName = stripAudioExt(fileName);
+      const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
+      return {
+        id: safeId,
+        name: baseName,
+        icon: TRACK_ICONS[index % TRACK_ICONS.length],
+        color: TRACK_COLORS[index % TRACK_COLORS.length],
+        file: track.file,
+        gen: null,
+      };
     });
-  } catch (_) {}
+
+  if (!SOUNDS.length) throw new Error('Aucune piste audio trouvée dans library.json');
 }
 // ─────────────────────────────────────────────────────────────────
 // MOTEUR AUDIO
@@ -1021,8 +1034,12 @@ class AudioEngine {
       }
     }
 
-    // Fallback : génération procédurale
-    this.buffers[sound.id] = this._generate(sound.gen);
+    if (sound.gen) {
+      this.buffers[sound.id] = this._generate(sound.gen);
+      return;
+    }
+
+    throw new Error(`[Somnia] Aucun fichier lisible pour la piste ${sound.id}`);
   }
 
   // ── Démarrage d'une piste avec fade in ──────────────────────
@@ -1045,32 +1062,75 @@ class AudioEngine {
     gainNode.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.4);
     gainNode.connect(this.masterGain);
 
+    const sourceInfo = this._startCrossfadedSource(id, gainNode, volume);
+
+    this.tracks[id] = { gainNode, active: true, volume, ...sourceInfo };
+  }
+
+
+  _spawnSource(id, gainNode, when, initialGain = 1) {
     const src = this.ctx.createBufferSource();
     src.buffer = this.buffers[id];
-    src.loop = true;
+    src.loop = false;
 
-    // Crossfade propre sur le point de bouclage
-    src.loopStart = 0;
-    src.loopEnd   = src.buffer.duration;
+    const localGain = this.ctx.createGain();
+    localGain.gain.setValueAtTime(initialGain, when);
 
-    src.connect(gainNode);
-    src.start(0);
+    src.connect(localGain);
+    localGain.connect(gainNode);
+    src.start(when);
+    return { src, localGain };
+  }
 
-    this.tracks[id] = { src, gainNode, active: true, volume };
+  _startCrossfadedSource(id, gainNode, volume) {
+    const now = this.ctx.currentTime;
+    const duration = this.buffers[id].duration;
+    const overlap = Math.min(1.2, Math.max(0.15, duration * 0.08));
+    const cycle = Math.max(0.25, duration - overlap);
+
+    let current = this._spawnSource(id, gainNode, now, 1);
+    const intervalId = setInterval(() => {
+      const t = this.tracks[id];
+      if (!t || !t.active) return;
+      const startAt = this.ctx.currentTime + 0.03;
+      const next = this._spawnSource(id, gainNode, startAt, 0);
+      next.localGain.gain.linearRampToValueAtTime(1, startAt + overlap);
+      current.localGain.gain.setValueAtTime(current.localGain.gain.value, startAt);
+      current.localGain.gain.linearRampToValueAtTime(0, startAt + overlap);
+      setTimeout(() => {
+        try { current.src.stop(); } catch (_) {}
+        try { current.src.disconnect(); } catch (_) {}
+        try { current.localGain.disconnect(); } catch (_) {}
+      }, (overlap + 0.1) * 1000);
+      current = next;
+      t.src = current.src;
+      t.sourceGain = current.localGain;
+    }, cycle * 1000);
+
+    return {
+      src: current.src,
+      sourceGain: current.localGain,
+      loopIntervalId: intervalId,
+      cycle,
+      overlap,
+    };
   }
 
   // ── Arrêt d'une piste avec fade out ─────────────────────────
   stopTrack(id) {
     const t = this.tracks[id];
     if (!t || !t.active) return;
+    if (t.loopIntervalId) clearInterval(t.loopIntervalId);
     const endTime = this.ctx.currentTime + 0.45;
     t.gainNode.gain.linearRampToValueAtTime(0, endTime);
     const srcRef = t.src;
+    const sourceGainRef = t.sourceGain;
     setTimeout(() => {
       try { srcRef.stop(); } catch (_) {}
       try { srcRef.disconnect(); } catch (_) {}
+      try { sourceGainRef?.disconnect(); } catch (_) {}
       try { t.gainNode.disconnect(); } catch (_) {}
-    }, 500);
+    }, 600);
     t.active = false;
     delete this.tracks[id];
   }
@@ -1563,7 +1623,17 @@ async function handleTrackVolume(id, val) {
       engine.setTrackVolume(id, avol);
     } else {
       // Démarrer
-      await engine.startTrack(id, avol);
+      try {
+        await engine.startTrack(id, avol);
+      } catch (e) {
+        console.warn(e);
+        volumes[id] = 0;
+        const slider = document.getElementById(`slider-${id}`);
+        if (slider) slider.value = 0;
+        updateSliderStyle(id, 0);
+        updateRowActive(id, 0);
+        toast('⚠️ Fichier audio introuvable pour cette piste');
+      }
     }
   }
   persistCurrentProfileState();
