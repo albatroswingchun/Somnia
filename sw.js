@@ -3,8 +3,8 @@
 // Stratégie : Cache-First pour assets statiques et fichiers audio
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_STATIC = 'somnia-static-v2.2';
-const CACHE_AUDIO  = 'somnia-audio-v2.2';
+const CACHE_STATIC = 'somnia-static-v2.3';
+const CACHE_AUDIO  = 'somnia-audio-v2.3';
 
 // Assets statiques mis en cache à l'installation
 const STATIC_ASSETS = [
@@ -48,8 +48,14 @@ self.addEventListener('fetch', event => {
   const ext = url.pathname.substring(url.pathname.lastIndexOf('.')).toLowerCase();
 
   // ── Fichiers audio : Cache-First, mise en cache au premier chargement
-  if (AUDIO_EXTS.includes(ext) || url.pathname.includes('/assets/audio/')) {
+  if (AUDIO_EXTS.includes(ext)) {
     event.respondWith(audioStrategy(event.request));
+    return;
+  }
+
+  // ── library.json : toujours réseau d'abord pour voir les nouvelles pistes
+  if (url.pathname.endsWith('/assets/audio/library.json')) {
+    event.respondWith(networkFirstStatic(event.request));
     return;
   }
 
@@ -67,6 +73,23 @@ self.addEventListener('fetch', event => {
 
   // Tout le reste : réseau direct
 });
+
+
+// ─── STRATÉGIE STATIC RÉSEAU-D'ABORD (pour library.json) ─────────
+async function networkFirstStatic(request) {
+  const cache = await caches.open(CACHE_STATIC);
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+    if (response && response.status === 200) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (_) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return new Response('{}', { status: 503, headers: { 'Content-Type': 'application/json' } });
+  }
+}
 
 // ─── STRATÉGIE AUDIO : Cache-First avec fallback réseau ─────────
 async function audioStrategy(request) {
