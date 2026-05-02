@@ -3,8 +3,8 @@
 // Stratégie : Cache-First pour assets statiques et fichiers audio
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_STATIC = 'somnia-static-v2.3';
-const CACHE_AUDIO  = 'somnia-audio-v2.3';
+const CACHE_STATIC = 'somnia-static-v2.4';
+const CACHE_AUDIO  = 'somnia-audio-v2.4';
 
 // Assets statiques mis en cache à l'installation
 const STATIC_ASSETS = [
@@ -50,6 +50,12 @@ self.addEventListener('fetch', event => {
   // ── Fichiers audio : Cache-First, mise en cache au premier chargement
   if (AUDIO_EXTS.includes(ext)) {
     event.respondWith(audioStrategy(event.request));
+    return;
+  }
+
+  // ── HTML shell : réseau d'abord pour éviter d'afficher une UI périmée
+  if (event.request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('/index.html')) {
+    event.respondWith(networkFirstStatic(event.request));
     return;
   }
 
