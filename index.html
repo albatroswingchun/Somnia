@@ -942,10 +942,8 @@ html, body {
 
 // ─────────────────────────────────────────────────────────────────
 // DÉFINITION DES SONS
-// Chaque son peut avoir un fichier audio OU utiliser le générateur.
-// Pour utiliser vos fichiers : remplissez le champ "file".
-// Ex: file: 'assets/audio/rain.m4a'
-// Si "file" est absent ou que le chargement échoue → générateur.
+// Les pistes utilisent uniquement des fichiers audio fournis dans assets/audio/library.json.
+// Ex: file: 'assets/audio/RAIN.aac'
 // ─────────────────────────────────────────────────────────────────
 let SOUNDS = [];
 
@@ -1037,25 +1035,15 @@ class AudioEngine {
   async loadBuffer(sound) {
     if (this.buffers[sound.id]) return;
 
-    if (sound.file) {
-      try {
-        const res = await fetch(sound.file);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const ab  = await res.arrayBuffer();
-        const buf = await this.ctx.decodeAudioData(ab);
-        this.buffers[sound.id] = buf;
-        return;
-      } catch (e) {
-        console.warn(`[Somnia] Fichier "${sound.file}" non trouvé — fallback générateur`, e.message);
-      }
+    if (!sound.file) {
+      throw new Error(`[Somnia] Aucun fichier audio déclaré pour la piste ${sound.id}`);
     }
 
- if (sound.gen) {
-      this.buffers[sound.id] = this._generate(sound.gen);
-      return;
-    }
-
-    throw new Error(`[Somnia] Aucun fichier lisible pour la piste ${sound.id}`);
+    const res = await fetch(sound.file);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const ab  = await res.arrayBuffer();
+    const buf = await this.ctx.decodeAudioData(ab);
+    this.buffers[sound.id] = buf;
   }
 
   // ── Démarrage d'une piste avec fade in ──────────────────────
@@ -1219,175 +1207,6 @@ class AudioEngine {
     return state;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // GÉNÉRATEUR AUDIO PROCÉDURAL (fallback)
-  // ─────────────────────────────────────────────────────────────
-  _generate(type) {
-    const sr  = this.ctx.sampleRate;
-    const dur = 8; // secondes de boucle
-    const len = sr * dur;
-    const buf = this.ctx.createBuffer(2, len, sr);
-    const L   = buf.getChannelData(0);
-    const R   = buf.getChannelData(1);
-    const rnd = () => Math.random() * 2 - 1;
-
-    // Filtre passe-bas simple
-    const lp = (data, k) => {
-      let s = 0;
-      for (let i = 0; i < data.length; i++) {
-        s = s * k + data[i] * (1 - k);
-        data[i] = s;
-      }
-    };
-
-    switch (type) {
-      case 'rain': case 'white': {
-        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.35; R[i] = rnd() * 0.35; }
-        if (type === 'rain') {
-          lp(L, 0.92); lp(R, 0.92);
-          for (let i = 0; i < len; i++) if (Math.random() < 0.0008) {
-            const amp = 0.4 + Math.random() * 0.3;
-            for (let j = 0; j < 60 && i + j < len; j++) {
-              L[i+j] += amp * rnd() * Math.exp(-j * 0.12);
-              R[i+j] += amp * rnd() * 0.8 * Math.exp(-j * 0.12);
-            }
-          }
-        }
-        break;
-      }
-      case 'wind': {
-        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
-        lp(L, 0.96); lp(R, 0.96);
-        for (let i = 0; i < len; i++) {
-          const m = 0.5 + 0.5 * Math.sin(i / sr * 0.25);
-          L[i] *= m * 0.5; R[i] *= m * 0.5;
-        }
-        break;
-      }
-      case 'thunder': {
-        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.02; R[i] = rnd() * 0.02; }
-        lp(L, 0.985); lp(R, 0.985);
-        [[0.15, 0.8], [0.6, 0.55]].forEach(([frac, amp]) => {
-          const start = Math.floor(frac * len);
-          const rlen  = Math.floor(sr * 0.9);
-          for (let i = 0; i < rlen && start + i < len; i++) {
-            const env = Math.sin(Math.PI * i / rlen) ** 2;
-            const v   = rnd() * amp * env;
-            L[start+i] += v; R[start+i] += v * 0.85;
-          }
-        });
-        lp(L, 0.96); lp(R, 0.96);
-        break;
-      }
-      case 'forest': {
-        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.05; R[i] = rnd() * 0.05; }
-        lp(L, 0.98); lp(R, 0.98);
-        for (let c = 0; c < 10; c++) {
-          const f = 2000 + Math.random() * 2500;
-          const s = Math.floor(Math.random() * len);
-          const cl = Math.floor(sr * 0.06);
-          for (let i = 0; i < cl && s + i < len; i++) {
-            const e = Math.sin(Math.PI * i / cl);
-            L[s+i] += Math.sin(2 * Math.PI * f * i / sr) * e * 0.1;
-            R[s+i] += Math.sin(2 * Math.PI * f * i / sr) * e * 0.08;
-          }
-        }
-        break;
-      }
-      case 'birds': {
-        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.015; R[i] = rnd() * 0.015; }
-        const freqs = [2200, 2800, 3100, 2600, 1900, 3400];
-        for (let c = 0; c < 14; c++) {
-          const f  = freqs[Math.floor(Math.random() * freqs.length)];
-          const f2 = f * (0.9 + Math.random() * 0.25);
-          const s  = Math.floor(Math.random() * (len - sr * 0.2));
-          const cl = Math.floor(sr * (0.07 + Math.random() * 0.12));
-          for (let i = 0; i < cl && s + i < len; i++) {
-            const t  = i / cl;
-            const e  = Math.sin(Math.PI * t);
-            const ff = f + (f2 - f) * t;
-            L[s+i] += Math.sin(2 * Math.PI * ff * i / sr) * e * 0.18;
-            R[s+i] += Math.sin(2 * Math.PI * (ff + 2) * i / sr) * e * 0.12;
-          }
-        }
-        break;
-      }
-      case 'river': {
-        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
-        const Lh = [...L], Rh = [...R];
-        lp(L, 0.98); lp(R, 0.98); lp(Lh, 0.88); lp(Rh, 0.88);
-        for (let i = 0; i < len; i++) { L[i] = (Lh[i] - L[i]) * 0.4; R[i] = (Rh[i] - R[i]) * 0.4; }
-        break;
-      }
-      case 'fire': {
-        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
-        lp(L, 0.95); lp(R, 0.95);
-        for (let i = 0; i < len; i++) {
-          if (Math.random() < 0.001) {
-            const amp = 0.2 + Math.random() * 0.35;
-            for (let j = 0; j < 80 && i + j < len; j++) {
-              L[i+j] += rnd() * amp * Math.exp(-j * 0.08);
-              R[i+j] += rnd() * amp * 0.85 * Math.exp(-j * 0.08);
-            }
-          }
-          L[i] *= 0.4; R[i] *= 0.4;
-        }
-        break;
-      }
-      case 'taps': {
-        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.01; R[i] = rnd() * 0.01; }
-        let pos = Math.floor(sr * 0.1);
-        const interval = Math.floor(sr * 0.7);
-        while (pos < len) {
-          const amp = 0.2 + Math.random() * 0.22;
-          for (let j = 0; j < 80 && pos + j < len; j++) {
-            const e = Math.exp(-j * 0.1);
-            L[pos+j] += rnd() * amp * e;
-            R[pos+j] += rnd() * amp * e * 0.7;
-          }
-          pos += interval + Math.floor((Math.random() - 0.5) * sr * 0.25);
-        }
-        break;
-      }
-      case 'bowl': {
-        const base = 220 + Math.random() * 60;
-        [[1.0, 0.5], [2.76, 0.18], [5.4, 0.07]].forEach(([h, amp]) => {
-          [0, Math.floor(len * 0.5)].forEach(start => {
-            const decay = sr * 2.8;
-            for (let i = 0; i < decay && start + i < len; i++) {
-              const e = Math.exp(-i / decay * 2);
-              L[start+i] += Math.sin(2 * Math.PI * base * h * i / sr) * amp * e;
-              R[start+i] += Math.sin(2 * Math.PI * (base * h + 1.5) * i / sr) * amp * 0.85 * e;
-            }
-          });
-        });
-        break;
-      }
-      case 'breath': {
-        const cycle = sr * 4.5;
-        for (let i = 0; i < len; i++) {
-          const e = 0.25 + 0.75 * Math.sin(Math.PI * i / cycle) ** 2;
-          L[i] = rnd() * e * 0.35; R[i] = rnd() * e * 0.35;
-        }
-        lp(L, 0.94); lp(R, 0.94);
-        break;
-      }
-      case 'texture': {
-        for (let i = 0; i < len; i++) { L[i] = rnd(); R[i] = rnd(); }
-        lp(L, 0.97); lp(R, 0.97);
-        for (let i = 0; i < len; i++) {
-          const m = 0.4 + 0.6 * Math.abs(Math.sin(Math.PI * 0.12 * i / sr));
-          L[i] *= m * 0.35; R[i] *= m * 0.35;
-        }
-        break;
-      }
-      default: {
-        for (let i = 0; i < len; i++) { L[i] = rnd() * 0.2; R[i] = rnd() * 0.2; }
-      }
-    }
-
-    return buf;
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────
