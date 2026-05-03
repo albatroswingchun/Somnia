@@ -963,20 +963,34 @@ function stripAudioExt(name) {
   return String(name || '').replace(/\.[a-z0-9]+$/i, '');
 }
 
-const PROCEDURAL_GENERATORS = new Set([
-  'rain','white','wind','thunder','forest','birds','river','fire','taps','bowl','breath','texture'
-]);
 
-function inferGenerator(track, baseName, safeId) {
-  const candidates = [
-    normalizeTrackKey(track && track.id),
-    normalizeTrackKey(baseName),
-    normalizeTrackKey(safeId),
-  ];
-  for (const candidate of candidates) {
-    if (PROCEDURAL_GENERATORS.has(candidate)) return candidate;
+function uniqueStrings(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function buildAudioPathCandidates(filePath) {
+  const raw = String(filePath || '').trim();
+  if (!raw) return [];
+  const normalized = raw.replace(/^\.\//, '');
+  const parts = normalized.split('/');
+  const fileName = parts.pop() || '';
+  const dir = parts.length ? `${parts.join('/')}/` : '';
+  const dot = fileName.lastIndexOf('.');
+  const base = dot >= 0 ? fileName.slice(0, dot) : fileName;
+  const ext = dot >= 0 ? fileName.slice(dot).toLowerCase() : '';
+
+  const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase()]);
+  const extVariants = uniqueStrings([ext, '.aac', '.m4a']);
+  const candidates = [];
+
+  for (const b of baseVariants) {
+    for (const e of extVariants) {
+      if (!e) continue;
+      candidates.push(`${dir}${b}${e}`);
+    }
   }
-  return null;
+
+  return uniqueStrings([normalized, ...candidates]).map(path => path.startsWith('./') ? path : `./${path}`);
 }
 
 async function loadSharedAudioLibrary() {
@@ -1039,11 +1053,24 @@ class AudioEngine {
       throw new Error(`[Somnia] Aucun fichier audio déclaré pour la piste ${sound.id}`);
     }
 
-    const res = await fetch(sound.file);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const ab  = await res.arrayBuffer();
-    const buf = await this.ctx.decodeAudioData(ab);
-    this.buffers[sound.id] = buf;
+    const candidates = buildAudioPathCandidates(sound.file);
+    let lastError = null;
+
+    for (const candidate of candidates) {
+      try {
+        const res = await fetch(candidate, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const ab  = await res.arrayBuffer();
+        const buf = await this.ctx.decodeAudioData(ab);
+        this.buffers[sound.id] = buf;
+        sound.file = candidate.replace(/^\.\//, '');
+        return;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    throw new Error(`[Somnia] Fichier audio introuvable ou illisible pour ${sound.id} (${sound.file})${lastError ? `: ${lastError.message}` : ''}`);
   }
 
   // ── Démarrage d'une piste avec fade in ──────────────────────
