@@ -965,6 +965,22 @@ function stripAudioExt(name) {
   return String(name || '').replace(/\.[a-z0-9]+$/i, '');
 }
 
+const PROCEDURAL_GENERATORS = new Set([
+  'rain','white','wind','thunder','forest','birds','river','fire','taps','bowl','breath','texture'
+]);
+
+function inferGenerator(track, baseName, safeId) {
+  const candidates = [
+    normalizeTrackKey(track && track.id),
+    normalizeTrackKey(baseName),
+    normalizeTrackKey(safeId),
+  ];
+  for (const candidate of candidates) {
+    if (PROCEDURAL_GENERATORS.has(candidate)) return candidate;
+  }
+  return null;
+}
+
 async function loadSharedAudioLibrary() {
   const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
   if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
@@ -983,7 +999,7 @@ async function loadSharedAudioLibrary() {
         icon: TRACK_ICONS[index % TRACK_ICONS.length],
         color: TRACK_COLORS[index % TRACK_COLORS.length],
         file: track.file,
-        gen: null,
+        gen: inferGenerator(track, baseName, safeId),
       };
     });
 
