@@ -2,10 +2,10 @@
   "version": 1,
   "updatedAt": "2026-05-03",
   "tracks": [
-    {"id":"RAIN","file":"assets/audio/RAIN.aac"},
-    {"id":"THUNDER","file":"assets/audio/THUNDER.aac"},
-    {"id":"BIRDS","file":"assets/audio/BIRDS.aac"},
-    {"id":"RIVER","file":"assets/audio/RIVER.aac"},
-    {"id":"ASMR_PURE_HAND","file":"assets/audio/ASMR_PURE_HAND.aac"}
+    {"id":"RAIN","file":"/assets/audio/RAIN.aac"},
+    {"id":"THUNDER","file":"/assets/audio/THUNDER.aac"},
+    {"id":"BIRDS","file":"/assets/audio/BIRDS.aac"},
+    {"id":"RIVER","file":"/assets/audio/RIVER.aac"},
+    {"id":"ASMR_PURE_HAND","file":"/assets/audio/ASMR_PURE_HAND.aac"}
   ]
 }

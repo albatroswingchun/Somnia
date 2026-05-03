@@ -993,8 +993,9 @@ function buildAudioPathCandidates(filePath) {
   return uniqueStrings([normalized, ...candidates]).map(path => path.startsWith('./') ? path : `./${path}`);
 }
 
+
 async function loadSharedAudioLibrary() {
-  const res = await fetch('assets/audio/library.json', { cache: 'no-store' });
+  const res = await fetch('/assets/audio/library.json', { cache: 'no-store' });
   if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
   const db = await res.json();
   if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
