@@ -1011,7 +1011,7 @@ async function loadSharedAudioLibrary() {
         icon: TRACK_ICONS[index % TRACK_ICONS.length],
         color: TRACK_COLORS[index % TRACK_COLORS.length],
         file: track.file,
-        gen: null,
+        gen: inferGenerator(track, baseName, safeId),
       };
     });
 
