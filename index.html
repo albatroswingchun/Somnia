@@ -980,7 +980,7 @@ function buildAudioPathCandidates(filePath) {
   const ext = dot >= 0 ? fileName.slice(dot).toLowerCase() : '';
 
   const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase()]);
-  const extVariants = uniqueStrings([ext, '.aac', '.m4a']);
+  const extVariants = uniqueStrings([ext, '.aac', '.m4a', '.mp3', '.wav', '.ogg', '.webm']);
   const candidates = [];
 
   for (const b of baseVariants) {
@@ -995,7 +995,7 @@ function buildAudioPathCandidates(filePath) {
 
 
 async function loadSharedAudioLibrary() {
-  const res = await fetch('/assets/audio/library.json', { cache: 'no-store' });
+  const res = await fetch('./assets/audio/library.json', { cache: 'no-store' });
   if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
   const db = await res.json();
   if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
@@ -1008,7 +1008,7 @@ async function loadSharedAudioLibrary() {
       const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
       return {
         id: safeId,
-        name: baseName,
+        name: String(track.name || baseName),
         icon: TRACK_ICONS[index % TRACK_ICONS.length],
         color: TRACK_COLORS[index % TRACK_COLORS.length],
         file: track.file,
