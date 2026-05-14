@@ -980,7 +980,7 @@ function buildAudioPathCandidates(filePath) {
   const ext = dot >= 0 ? fileName.slice(dot).toLowerCase() : '';
 
   const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase()]);
-  const extVariants = uniqueStrings([ext, '.aac', '.m4a']);
+  const extVariants = uniqueStrings([ext, '.aac', '.m4a', '.mp3', '.wav', '.ogg', '.webm']);
   const candidates = [];
 
   for (const b of baseVariants) {
@@ -995,24 +995,38 @@ function buildAudioPathCandidates(filePath) {
 
 
 async function loadSharedAudioLibrary() {
-  const res = await fetch('/assets/audio/library.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
-  const db = await res.json();
-  if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
+  const libraryCandidates = ['./assets/audio/library.json', 'assets/audio/library.json', '/assets/audio/library.json'];
+  let db = null;
+  let lastErr = null;
+
+  for (const path of libraryCandidates) {
+    try {
+      const res = await fetch(path, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} on ${path}`);
+      const parsed = await res.json();
+      if (!parsed || !Array.isArray(parsed.tracks)) throw new Error(`library.json invalide (${path})`);
+      db = parsed;
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (!db) throw new Error(`Impossible de charger library.json: ${lastErr ? lastErr.message : 'inconnu'}`);
 
   SOUNDS = db.tracks
     .filter(track => track && track.file)
     .map((track, index) => {
       const fileName = fileNameFromPath(track.file);
       const baseName = stripAudioExt(fileName);
-      const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
+      const trackId = normalizeTrackKey(track.id || baseName).replace(/[^a-z0-9_-]/g, '-');
       return {
-        id: safeId,
-        name: baseName,
-        icon: TRACK_ICONS[index % TRACK_ICONS.length],
-        color: TRACK_COLORS[index % TRACK_COLORS.length],
+        id: trackId,
+        name: String(track.name || baseName),
+        icon: String(track.icon || TRACK_ICONS[index % TRACK_ICONS.length]),
+        color: String(track.color || TRACK_COLORS[index % TRACK_COLORS.length]),
         file: track.file,
-        gen: inferGenerator(track, baseName, safeId),
+        gen: inferGenerator(track, baseName, trackId),
       };
     });
 
