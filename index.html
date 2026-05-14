@@ -1008,7 +1008,7 @@ async function loadSharedAudioLibrary() {
       const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
       return {
         id: safeId,
-        name: baseName,
+        name: String(track.name || baseName),
         icon: TRACK_ICONS[index % TRACK_ICONS.length],
         color: TRACK_COLORS[index % TRACK_COLORS.length],
         file: track.file,
