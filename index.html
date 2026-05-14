@@ -1019,14 +1019,14 @@ async function loadSharedAudioLibrary() {
     .map((track, index) => {
       const fileName = fileNameFromPath(track.file);
       const baseName = stripAudioExt(fileName);
-      const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
+      const trackId = normalizeTrackKey(track.id || baseName).replace(/[^a-z0-9_-]/g, '-');
       return {
-        id: safeId,
+        id: trackId,
         name: String(track.name || baseName),
-        icon: TRACK_ICONS[index % TRACK_ICONS.length],
-        color: TRACK_COLORS[index % TRACK_COLORS.length],
+        icon: String(track.icon || TRACK_ICONS[index % TRACK_ICONS.length]),
+        color: String(track.color || TRACK_COLORS[index % TRACK_COLORS.length]),
         file: track.file,
-        gen: inferGenerator(track, baseName, safeId),
+        gen: inferGenerator(track, baseName, trackId),
       };
     });
 
