@@ -995,10 +995,24 @@ function buildAudioPathCandidates(filePath) {
 
 
 async function loadSharedAudioLibrary() {
-  const res = await fetch('./assets/audio/library.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
-  const db = await res.json();
-  if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
+  const libraryCandidates = ['./assets/audio/library.json', 'assets/audio/library.json', '/assets/audio/library.json'];
+  let db = null;
+  let lastErr = null;
+
+  for (const path of libraryCandidates) {
+    try {
+      const res = await fetch(path, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} on ${path}`);
+      const parsed = await res.json();
+      if (!parsed || !Array.isArray(parsed.tracks)) throw new Error(`library.json invalide (${path})`);
+      db = parsed;
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (!db) throw new Error(`Impossible de charger library.json: ${lastErr ? lastErr.message : 'inconnu'}`);
 
   SOUNDS = db.tracks
     .filter(track => track && track.file)
