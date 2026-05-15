@@ -995,11 +995,18 @@ function buildAudioPathCandidates(filePath) {
 
 
 async function loadSharedAudioLibrary() {
-  const libraryCandidates = ['./assets/audio/library.json', 'assets/audio/library.json', '/assets/audio/library.json'];
+  const baseDir = window.location.pathname.replace(/[^/]*$/, '');
+  const libraryCandidates = [
+    './assets/audio/library.json',
+    'assets/audio/library.json',
+    '/assets/audio/library.json',
+    `${baseDir}assets/audio/library.json`,
+    `${window.location.origin}${baseDir}assets/audio/library.json`
+  ];
   let db = null;
   let lastErr = null;
 
-  for (const path of libraryCandidates) {
+  for (const path of uniqueStrings(libraryCandidates)) {
     try {
       const res = await fetch(path, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status} on ${path}`);
@@ -2116,7 +2123,7 @@ function initAmbient() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./sw.js?v=2.4');
+      const reg = await navigator.serviceWorker.register('./sw.js?v=2.7');
       reg.update?.();
     } catch (e) {
       console.warn(e);
@@ -2137,6 +2144,10 @@ if ('serviceWorker' in navigator) {
     console.warn('Audio library load failed:', e);
   }
   buildTrackList();
+  if (!SOUNDS.length) {
+    const list = document.getElementById('track-list');
+    if (list) list.innerHTML = '<div class="track-row" style="justify-content:center;color:var(--text-dim)">Aucun son chargé (vérifiez assets/audio/library.json)</div>';
+  }
   initAmbient();
   renderPresets();
   renderProfilePicker();
