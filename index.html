@@ -943,12 +943,13 @@ html, body {
 // ─────────────────────────────────────────────────────────────────
 // DÉFINITION DES SONS
 // Les pistes utilisent uniquement des fichiers audio fournis dans assets/audio/library.json.
-// Ex: file: 'assets/audio/RAIN.aac'
+// Ex: file: 'assets/audio/RAIN.mp3'
 // ─────────────────────────────────────────────────────────────────
 let SOUNDS = [];
 
 const TRACK_COLORS = ['#6ba4e8','#9b7fe8','#5fbfa0','#4ade80','#fbbf24','#38bdf8','#fb923c','#94a3b8','#f9a8d4','#fde68a','#c4b5fd','#fdba74'];
 const TRACK_ICONS = ['🎧','🌙','✨','💤','🎵','🔊','🫧','🌌','🕯️','🍃','🌊','🪷'];
+
 
 function normalizeTrackKey(value) {
   return String(value || '').trim().toLowerCase();
@@ -968,6 +969,44 @@ function uniqueStrings(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+
+function startsWithXpacket(arrayBuffer) {
+  try {
+    const bytes = new Uint8Array(arrayBuffer.slice(0, 16));
+    const head = String.fromCharCode(...bytes);
+    return head.startsWith('<?xpacket');
+  } catch {
+    return false;
+  }
+}
+
+
+
+async function validateLibraryAudioFiles() {
+  const invalid = [];
+  for (const sound of SOUNDS) {
+    const candidates = buildAudioPathCandidates(sound.file);
+    let valid = false;
+    for (const candidate of candidates) {
+      try {
+        const res = await fetch(candidate, { cache: 'no-store' });
+        if (!res.ok) continue;
+        const ab = await res.arrayBuffer();
+        if (startsWithXpacket(ab)) throw new Error('XMP/XML');
+        valid = true;
+        break;
+      } catch (e) {
+        if (String(e?.message || '').includes('XMP/XML')) {
+          invalid.push(sound.file);
+          break;
+        }
+      }
+    }
+    if (!valid && !invalid.includes(sound.file)) invalid.push(sound.file);
+  }
+  return invalid;
+}
+
 function buildAudioPathCandidates(filePath) {
   const raw = String(filePath || '').trim();
   if (!raw) return [];
@@ -979,8 +1018,9 @@ function buildAudioPathCandidates(filePath) {
   const base = dot >= 0 ? fileName.slice(0, dot) : fileName;
   const ext = dot >= 0 ? fileName.slice(dot).toLowerCase() : '';
 
-  const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase()]);
-  const extVariants = uniqueStrings([ext, '.aac', '.m4a']);
+  const baseTitle = base ? (base.charAt(0).toUpperCase() + base.slice(1).toLowerCase()) : base;
+  const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase(), baseTitle]);
+  const extVariants = uniqueStrings([ext, '.aac', '.m4a', '.mp3', '.wav', '.ogg', '.webm']);
   const candidates = [];
 
   for (const b of baseVariants) {
@@ -995,24 +1035,44 @@ function buildAudioPathCandidates(filePath) {
 
 
 async function loadSharedAudioLibrary() {
-  const res = await fetch('/assets/audio/library.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`library.json HTTP ${res.status}`);
-  const db = await res.json();
-  if (!db || !Array.isArray(db.tracks)) throw new Error('library.json invalide');
+  const baseDir = window.location.pathname.replace(/[^/]*$/, '');
+  const libraryCandidates = [
+    './assets/audio/library.json',
+    'assets/audio/library.json',
+    '/assets/audio/library.json',
+    `${baseDir}assets/audio/library.json`,
+    `${window.location.origin}${baseDir}assets/audio/library.json`
+  ];
+  let db = null;
+  let lastErr = null;
+
+  for (const path of uniqueStrings(libraryCandidates)) {
+    try {
+      const res = await fetch(path, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} on ${path}`);
+      const parsed = await res.json();
+      if (!parsed || !Array.isArray(parsed.tracks)) throw new Error(`library.json invalide (${path})`);
+      db = parsed;
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (!db) throw new Error(`Impossible de charger library.json: ${lastErr ? lastErr.message : 'inconnu'}`);
 
   SOUNDS = db.tracks
     .filter(track => track && track.file)
     .map((track, index) => {
       const fileName = fileNameFromPath(track.file);
       const baseName = stripAudioExt(fileName);
-      const safeId = normalizeTrackKey(baseName).replace(/[^a-z0-9_-]/g, '-');
+      const trackId = normalizeTrackKey(track.id || baseName).replace(/[^a-z0-9_-]/g, '-');
       return {
-        id: safeId,
-        name: baseName,
-        icon: TRACK_ICONS[index % TRACK_ICONS.length],
-        color: TRACK_COLORS[index % TRACK_COLORS.length],
+        id: trackId,
+        name: String(track.name || baseName),
+        icon: String(track.icon || TRACK_ICONS[index % TRACK_ICONS.length]),
+        color: String(track.color || TRACK_COLORS[index % TRACK_COLORS.length]),
         file: track.file,
-        gen: inferGenerator(track, baseName, safeId),
       };
     });
 
@@ -1062,6 +1122,7 @@ class AudioEngine {
         const res = await fetch(candidate, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const ab  = await res.arrayBuffer();
+        if (startsWithXpacket(ab)) throw new Error('Fichier invalide: contenu XMP/XML détecté (pas un audio)');
         const buf = await this.ctx.decodeAudioData(ab);
         this.buffers[sound.id] = buf;
         sound.file = candidate.replace(/^\.\//, '');
@@ -1495,7 +1556,9 @@ async function handleTrackVolume(id, val) {
         if (slider) slider.value = 0;
         updateSliderStyle(id, 0);
         updateRowActive(id, 0);
-        toast('⚠️ Fichier audio introuvable pour cette piste');
+        const detail = String(e?.message || '');
+        if (detail.includes('XMP/XML')) toast('⚠️ Fichier invalide (XMP/XML) : réexporte ce son en vrai MP3/M4A');
+        else toast('⚠️ Fichier audio introuvable pour cette piste');
       }
     }
   }
@@ -2102,7 +2165,7 @@ function initAmbient() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./sw.js?v=2.4');
+      const reg = await navigator.serviceWorker.register('./sw.js?v=2.7');
       reg.update?.();
     } catch (e) {
       console.warn(e);
@@ -2123,6 +2186,16 @@ if ('serviceWorker' in navigator) {
     console.warn('Audio library load failed:', e);
   }
   buildTrackList();
+  if (!SOUNDS.length) {
+    const list = document.getElementById('track-list');
+    if (list) list.innerHTML = '<div class="track-row" style="justify-content:center;color:var(--text-dim)">Aucun son chargé (vérifiez assets/audio/library.json)</div>';
+  } else {
+    const invalidFiles = await validateLibraryAudioFiles();
+    if (invalidFiles.length) {
+      toast(`⚠️ Fichiers audio invalides: ${invalidFiles.join(', ')}` , 5200);
+      console.warn('[Somnia] Invalid audio files detected:', invalidFiles);
+    }
+  }
   initAmbient();
   renderPresets();
   renderProfilePicker();

@@ -15,7 +15,7 @@
 | Réveil programmable | **Supprimé** |
 | Augmenter/réduire luminosité | **Toggle dim seul** |
 | Pas de visuel | **Visual ASMR (EMDR)** |
-| Sons générés uniquement | **Vos fichiers audio + fallback générateur** |
+| Sons générés uniquement | **Vos fichiers audio uniquement** |
 
 ---
 
@@ -52,12 +52,20 @@ somnia/
 
 ### Principe de fonctionnement
 
-Somnia utilise un **système à double fallback** :
+Somnia utilise uniquement les fichiers audio du dossier `assets/audio/` :
 
-1. **Priorité 1** : fichier audio dans `assets/audio/` (votre son)
-2. **Priorité 2** : générateur Web Audio procédural (automatique si le fichier manque)
+Si un fichier manque, la piste concernée ne pourra pas être lue. Assurez-vous que chaque entrée de `assets/audio/library.json` pointe vers un fichier présent dans le dépôt.
 
-Vous pouvez donc déployer l'application **sans aucun fichier audio** — elle fonctionnera avec les sons générés. Ajoutez vos fichiers progressivement.
+
+### Vérifier vos fichiers avant déploiement
+
+Exécutez ce contrôle local pour détecter les faux fichiers audio (ex: XML/XMP renommé en `.mp3`):
+
+```bash
+python scripts/validate_audio_assets.py
+```
+
+Si le script affiche `Invalid audio-like files detected`, il faut réexporter les sons depuis votre logiciel audio en vrai MP3/M4A, puis recommitter.
 
 ### Formats supportés
 
@@ -141,9 +149,9 @@ Le champ `gen` indique quel générateur utiliser si le fichier est absent (`'wh
 2. **Chargements suivants** (avec ou sans connexion) :
    - Le Service Worker sert les fichiers depuis le cache (Cache-First)
    - Les sons déjà joués une fois sont disponibles hors ligne
-   - Les sons jamais joués → fallback générateur Web Audio
+   - Les sons jamais joués → indisponibles tant que le fichier manque
 
-3. **Sons générés (fallback)** :
+3. **Sons audio du dépôt** :
    - Entièrement dans le navigateur, aucune connexion requise
    - Disponibles instantanément à chaque session
 

@@ -1,9 +1,9 @@
-// SOMNIA v2.6 — FORCE AUDIO FIX
-const CACHE_STATIC = 'somnia-static-v2.6';
-const CACHE_AUDIO  = 'somnia-audio-v2.6';
+// SOMNIA v2.7 — STATIC CACHE (AUDIO LIB ONLY)
+const CACHE_STATIC = 'somnia-static-v2.7';
+const CACHE_AUDIO  = 'somnia-audio-v2.7';
 
 self.addEventListener('install', e=>{
- e.waitUntil(caches.open(CACHE_STATIC).then(c=>c.addAll(['./','./index.html','./manifest.json','./assets/audio/library.json','./assets/audio/runtime-audio-fix.js'])));
+ e.waitUntil(caches.open(CACHE_STATIC).then(c=>c.addAll(['./','./index.html','./manifest.json','./assets/audio/library.json'])));
  self.skipWaiting();
 });
 
@@ -13,13 +13,5 @@ self.addEventListener('activate', e=>{
 });
 
 self.addEventListener('fetch', e=>{
- if(e.request.destination==='document'){
-   e.respondWith(fetch(e.request).then(async res=>{
-     const text=await res.text();
-     const injected=text.replace('</body>','<script src="assets/audio/runtime-audio-fix.js"></script></body>');
-     return new Response(injected,{headers:{'Content-Type':'text/html'}});
-   }).catch(()=>caches.match('./index.html')));
-   return;
- }
  e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
 });
