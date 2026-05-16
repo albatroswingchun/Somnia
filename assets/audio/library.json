@@ -1,46 +1,41 @@
 {
-  "version": 2,
-  "updatedAt": "2026-05-03",
+  "version": 3,
+  "updatedAt": "2026-05-16",
   "tracks": [
     {
       "id": "rain",
-      "name": "Pluie douce",
+      "name": "RAIN",
       "icon": "🌧️",
       "color": "#6ba4e8",
-      "file": "assets/audio/RAIN.aac",
-      "gen": "rain"
+      "file": "assets/audio/RAIN.mp3"
     },
     {
       "id": "thunder",
-      "name": "Orage lointain",
+      "name": "THUNDER",
       "icon": "⛈️",
       "color": "#8b7cf6",
-      "file": "assets/audio/THUNDER.aac",
-      "gen": "rain"
+      "file": "assets/audio/THUNDER.mp3"
     },
     {
       "id": "birds",
-      "name": "Oiseaux",
+      "name": "BIRDS",
       "icon": "🐦",
       "color": "#f9d66b",
-      "file": "assets/audio/BIRDS.aac",
-      "gen": "white"
+      "file": "assets/audio/BIRDS.mp3"
     },
     {
       "id": "river",
-      "name": "Rivière",
+      "name": "RIVER",
       "icon": "🌊",
       "color": "#5ad8ff",
-      "file": "assets/audio/RIVER.aac",
-      "gen": "rain"
+      "file": "assets/audio/RIVER.mp3"
     },
     {
-      "id": "taps",
-      "name": "ASMR mains",
+      "id": "asmr_pure_hand",
+      "name": "ASMR_PURE_HAND",
       "icon": "👐",
       "color": "#d6b4ff",
-      "file": "assets/audio/ASMR_PURE_HAND.aac",
-      "gen": "white"
+      "file": "assets/audio/ASMR_PURE_HAND.mp3"
     }
   ]
 }
