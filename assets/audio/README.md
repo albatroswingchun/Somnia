@@ -9,4 +9,4 @@ Déposez ici vos fichiers audio partagés avec tous les utilisateurs.
 4. Committez les fichiers audio + JSON pour qu'ils soient déployés à tous.
 
 L'application lit automatiquement `library.json` au démarrage et remplace les chemins `file` des sons existants.
-Si un fichier est manquant, Somnia utilise le fallback générateur.
+Si un fichier est manquant, Somnia n'a pas de fallback: le fichier audio est requis.
