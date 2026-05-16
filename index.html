@@ -943,22 +943,13 @@ html, body {
 // ─────────────────────────────────────────────────────────────────
 // DÉFINITION DES SONS
 // Les pistes utilisent uniquement des fichiers audio fournis dans assets/audio/library.json.
-// Ex: file: 'assets/audio/RAIN.aac'
+// Ex: file: 'assets/audio/RAIN.mp3'
 // ─────────────────────────────────────────────────────────────────
 let SOUNDS = [];
 
 const TRACK_COLORS = ['#6ba4e8','#9b7fe8','#5fbfa0','#4ade80','#fbbf24','#38bdf8','#fb923c','#94a3b8','#f9a8d4','#fde68a','#c4b5fd','#fdba74'];
 const TRACK_ICONS = ['🎧','🌙','✨','💤','🎵','🔊','🫧','🌌','🕯️','🍃','🌊','🪷'];
 
-const EMBEDDED_LIBRARY_FALLBACK = {
-  tracks: [
-    { id: 'rain', name: 'RAIN', icon: '🌧️', color: '#6ba4e8', file: 'assets/audio/RAIN.aac' },
-    { id: 'thunder', name: 'THUNDER', icon: '⛈️', color: '#8b7cf6', file: 'assets/audio/THUNDER.aac' },
-    { id: 'birds', name: 'BIRDS', icon: '🐦', color: '#f9d66b', file: 'assets/audio/BIRDS.aac' },
-    { id: 'river', name: 'RIVER', icon: '🌊', color: '#5ad8ff', file: 'assets/audio/RIVER.aac' },
-    { id: 'asmr_pure_hand', name: 'ASMR_PURE_HAND', icon: '👐', color: '#d6b4ff', file: 'assets/audio/ASMR_PURE_HAND.aac' }
-  ]
-};
 
 function normalizeTrackKey(value) {
   return String(value || '').trim().toLowerCase();
@@ -1029,10 +1020,7 @@ async function loadSharedAudioLibrary() {
     }
   }
 
-  if (!db) {
-    console.warn(`Impossible de charger library.json, fallback embarqué utilisé: ${lastErr ? lastErr.message : 'inconnu'}`);
-    db = EMBEDDED_LIBRARY_FALLBACK;
-  }
+  if (!db) throw new Error(`Impossible de charger library.json: ${lastErr ? lastErr.message : 'inconnu'}`);
 
   SOUNDS = db.tracks
     .filter(track => track && track.file)
@@ -1046,7 +1034,6 @@ async function loadSharedAudioLibrary() {
         icon: String(track.icon || TRACK_ICONS[index % TRACK_ICONS.length]),
         color: String(track.color || TRACK_COLORS[index % TRACK_COLORS.length]),
         file: track.file,
-        gen: inferGenerator(track, baseName, trackId),
       };
     });
 
