@@ -7,35 +7,35 @@
       "name": "RAIN",
       "icon": "🌧️",
       "color": "#6ba4e8",
-      "file": "assets/audio/RAIN.mp3"
+      "file": "assets/audio/Rain.mp3"
     },
     {
       "id": "thunder",
       "name": "THUNDER",
       "icon": "⛈️",
       "color": "#8b7cf6",
-      "file": "assets/audio/THUNDER.mp3"
+      "file": "assets/audio/Thunder.mp3"
     },
     {
       "id": "birds",
       "name": "BIRDS",
       "icon": "🐦",
       "color": "#f9d66b",
-      "file": "assets/audio/BIRDS.mp3"
+      "file": "assets/audio/Birds.mp3"
     },
     {
       "id": "river",
       "name": "RIVER",
       "icon": "🌊",
       "color": "#5ad8ff",
-      "file": "assets/audio/RIVER.mp3"
+      "file": "assets/audio/River.mp3"
     },
     {
-      "id": "asmr_pure_hand",
-      "name": "ASMR_PURE_HAND",
+      "id": "asmr",
+      "name": "ASMR",
       "icon": "👐",
       "color": "#d6b4ff",
-      "file": "assets/audio/ASMR_PURE_HAND.mp3"
+      "file": "assets/audio/ASMR.mp3"
     }
   ]
 }

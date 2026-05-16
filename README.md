@@ -56,6 +56,17 @@ Somnia utilise uniquement les fichiers audio du dossier `assets/audio/` :
 
 Si un fichier manque, la piste concernée ne pourra pas être lue. Assurez-vous que chaque entrée de `assets/audio/library.json` pointe vers un fichier présent dans le dépôt.
 
+
+### Vérifier vos fichiers avant déploiement
+
+Exécutez ce contrôle local pour détecter les faux fichiers audio (ex: XML/XMP renommé en `.mp3`):
+
+```bash
+python scripts/validate_audio_assets.py
+```
+
+Si le script affiche `Invalid audio-like files detected`, il faut réexporter les sons depuis votre logiciel audio en vrai MP3/M4A, puis recommitter.
+
 ### Formats supportés
 
 | Format | Extension | Recommandation |
