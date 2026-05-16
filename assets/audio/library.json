@@ -1,46 +1,11 @@
 {
-  "version": 2,
-  "updatedAt": "2026-05-03",
+  "version": 3,
+  "updatedAt": "2026-05-14",
   "tracks": [
-    {
-      "id": "rain",
-      "name": "Pluie douce",
-      "icon": "🌧️",
-      "color": "#6ba4e8",
-      "file": "assets/audio/RAIN.aac",
-      "gen": "rain"
-    },
-    {
-      "id": "thunder",
-      "name": "Orage lointain",
-      "icon": "⛈️",
-      "color": "#8b7cf6",
-      "file": "assets/audio/THUNDER.aac",
-      "gen": "rain"
-    },
-    {
-      "id": "birds",
-      "name": "Oiseaux",
-      "icon": "🐦",
-      "color": "#f9d66b",
-      "file": "assets/audio/BIRDS.aac",
-      "gen": "white"
-    },
-    {
-      "id": "river",
-      "name": "Rivière",
-      "icon": "🌊",
-      "color": "#5ad8ff",
-      "file": "assets/audio/RIVER.aac",
-      "gen": "rain"
-    },
-    {
-      "id": "taps",
-      "name": "ASMR mains",
-      "icon": "👐",
-      "color": "#d6b4ff",
-      "file": "assets/audio/ASMR_PURE_HAND.aac",
-      "gen": "white"
-    }
+    { "id": "rain", "name": "RAIN", "icon": "🌧️", "color": "#6ba4e8", "file": "assets/audio/RAIN.aac" },
+    { "id": "thunder", "name": "THUNDER", "icon": "⛈️", "color": "#8b7cf6", "file": "assets/audio/THUNDER.aac" },
+    { "id": "birds", "name": "BIRDS", "icon": "🐦", "color": "#f9d66b", "file": "assets/audio/BIRDS.aac" },
+    { "id": "river", "name": "RIVER", "icon": "🌊", "color": "#5ad8ff", "file": "assets/audio/RIVER.aac" },
+    { "id": "asmr_pure_hand", "name": "ASMR_PURE_HAND", "icon": "👐", "color": "#d6b4ff", "file": "assets/audio/ASMR_PURE_HAND.aac" }
   ]
 }
