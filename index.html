@@ -980,7 +980,8 @@ function buildAudioPathCandidates(filePath) {
   const base = dot >= 0 ? fileName.slice(0, dot) : fileName;
   const ext = dot >= 0 ? fileName.slice(dot).toLowerCase() : '';
 
-  const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase()]);
+  const baseTitle = base ? (base.charAt(0).toUpperCase() + base.slice(1).toLowerCase()) : base;
+  const baseVariants = uniqueStrings([base, base.toUpperCase(), base.toLowerCase(), baseTitle]);
   const extVariants = uniqueStrings([ext, '.aac', '.m4a', '.mp3', '.wav', '.ogg', '.webm']);
   const candidates = [];
 
