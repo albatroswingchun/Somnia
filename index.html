@@ -969,6 +969,17 @@ function uniqueStrings(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+
+function startsWithXpacket(arrayBuffer) {
+  try {
+    const bytes = new Uint8Array(arrayBuffer.slice(0, 16));
+    const head = String.fromCharCode(...bytes);
+    return head.startsWith('<?xpacket');
+  } catch {
+    return false;
+  }
+}
+
 function buildAudioPathCandidates(filePath) {
   const raw = String(filePath || '').trim();
   if (!raw) return [];
@@ -1084,6 +1095,7 @@ class AudioEngine {
         const res = await fetch(candidate, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const ab  = await res.arrayBuffer();
+        if (startsWithXpacket(ab)) throw new Error('Fichier invalide: contenu XMP/XML détecté (pas un audio)');
         const buf = await this.ctx.decodeAudioData(ab);
         this.buffers[sound.id] = buf;
         sound.file = candidate.replace(/^\.\//, '');
@@ -1517,7 +1529,9 @@ async function handleTrackVolume(id, val) {
         if (slider) slider.value = 0;
         updateSliderStyle(id, 0);
         updateRowActive(id, 0);
-        toast('⚠️ Fichier audio introuvable pour cette piste');
+        const detail = String(e?.message || '');
+        if (detail.includes('XMP/XML')) toast('⚠️ Fichier invalide (XMP/XML) : réexporte ce son en vrai MP3/M4A');
+        else toast('⚠️ Fichier audio introuvable pour cette piste');
       }
     }
   }
