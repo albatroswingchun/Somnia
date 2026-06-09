@@ -507,25 +507,27 @@ html, body {
 .vasmr-back-float { position: fixed; top: 16px; left: 16px; z-index: 60; }
 
 .vasmr-overlay-controls {
-  width: 100%;
-  padding: 12px 20px 20px;
+  position: absolute;
+  top: 14px;
+  right: 14px;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
 }
 
 .vasmr-close-btn {
+  width: 40px;
   height: 40px;
-  flex: 1;
-  border-radius: 10px;
+  border-radius: 50%;
   border: 1px solid var(--border-hi);
-  background: var(--bg-high);
-  color: var(--text);
+  background: rgba(17,21,32,0.78);
+  color: var(--text-hi);
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 19px;
+  line-height: 1;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 .vasmr-close-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -752,7 +754,7 @@ html, body {
   <button class="ghost-btn vasmr-back-float" id="vasmr-back-float-btn">← Retour</button>
   <canvas id="vasmr-canvas"></canvas>
   <div class="vasmr-overlay-controls">
-    <button class="vasmr-close-btn" id="vasmr-close-btn">✕ Fermer Visual ASMR</button>
+    <button class="vasmr-close-btn" id="vasmr-close-btn" aria-label="Fermer le plein écran" title="Fermer">✕</button>
   </div>
 </div>
 
